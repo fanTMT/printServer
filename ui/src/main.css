@@ -1,0 +1,22 @@
+/* 1. 先引入 Element Plus 样式（确保 Tailwind 能覆盖） */
+@import 'element-plus/dist/index.css';
+
+/* 2. 再引入 Tailwind 核心样式 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3. 可选：重置 Element Plus 组件样式，适配 Tailwind */
+@layer utilities {
+
+    /* 示例：统一 Element Plus 按钮的圆角为 Tailwind 风格 */
+    .el-button {
+        @apply rounded-lg;
+    }
+
+    /* 示例：统一表格行高 */
+    .el-table {
+        @apply tw-text-sm;
+        /* 若加了 tw- 前缀，需用 tw- 开头 */
+    }
+}
