@@ -1,22 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use crate::error::AuthError;
-
-// 用户登录请求
-#[derive(Deserialize)]
-pub struct LoginRequest {
-    pub username: String,
-    pub password: String,
-}
-
-// 用户注册请求
-#[derive(Deserialize)]
-pub struct RegisterRequest {
-    pub username: String,
-    pub password: String,
-    pub email: String,
-}
-
 // 认证响应
 #[derive(Serialize)]
 pub struct AuthResponse {
@@ -60,7 +44,7 @@ impl JwtConfig {
             &claims,
             &jsonwebtoken::EncodingKey::from_secret(self.secret.as_bytes()),
         )
-        .map_err(|_| AuthError::TokenCreation)
+        .map_err(|_| AuthError::TokenCreation("创建令牌错误".to_string()))
     }
 
     /// 验证

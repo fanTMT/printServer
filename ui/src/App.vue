@@ -18,6 +18,7 @@ onMounted(() => {
   // 初始化用户信息
   userStore.initUserFromStorage()
 })
+
 </script>
 
 <style>

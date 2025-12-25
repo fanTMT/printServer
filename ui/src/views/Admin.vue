@@ -150,7 +150,7 @@
 import { ref, onMounted } from 'vue';
 import { getprinter } from '@/api/auth';
 import { get_all, get_setting, set_setting } from '@/api/api';
-import formatDate from '@/utils/formatDate';
+import { formatDate } from '@/utils/formatDate';
 
 // 定义定时任务标识
 let timer = null

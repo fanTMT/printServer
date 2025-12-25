@@ -1,0 +1,20 @@
+[Unit]
+Description=Web Rust Print Server (Axum + SQLite)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/lib/web-rust-print
+ExecStart=/usr/bin/web_rust_print
+Restart=always
+RestartSec=5
+Environment="RUST_LOG=info"
+
+# 安全加固
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/web-rust-print
+
+[Install]
+WantedBy=multi-user.target

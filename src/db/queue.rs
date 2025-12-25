@@ -60,7 +60,7 @@ pub async fn add_queue_item(
         .bind(item.updated_at)
     .execute(db)
     .await?;
-    info!("插入行的ID:{:#?}", a.last_insert_rowid());
+    info!(target: "axum","插入行的ID:{:#?}", a.last_insert_rowid());
     Ok(())
 }
 

@@ -308,7 +308,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { get_all } from '@/api/api';
-import formatDate from '@/utils/formatDate';
+import { formatDate, parseArrayDate } from '@/utils/formatDate';
 
 // 响应式数据
 const totalPrints = ref(0);

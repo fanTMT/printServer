@@ -14,7 +14,7 @@ pub fn init_logger() {
 /// 开发环境日志配置 - 详细输出
 fn init_dev() {
     let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| "axum_web_app=debug,tower_http=debug,info".into());
+        .unwrap_or_else(|_| "axum=debug,tower_http=debug,info".into());
 
     let fmt_layer = fmt::layer()
         .pretty() // 美化输出
@@ -29,7 +29,7 @@ fn init_dev() {
         .init();
 
     tracing::info!("🚀 开发环境日志已初始化 - 详细模式");
-    tracing::debug!(target: "axum_web_app", "调试信息将显示");
+    tracing::debug!(target: "axum", "调试信息将显示");
     tracing::trace!("跟踪信息将显示");
 }
 
@@ -37,7 +37,7 @@ fn init_dev() {
 fn init_pro() {
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
         // 生产环境默认只显示警告和错误
-        "axum_web_app=info,tower_http=info,warn".into()
+        "axum=info,tower_http=info,warn".into()
     });
 
     let fmt_layer = fmt::layer()
@@ -52,5 +52,5 @@ fn init_pro() {
         .with(fmt_layer)
         .init();
 
-    tracing::info!(target: "axum_web_app", "🏭 生产环境日志已初始化 - JSON 格式");
+    tracing::info!(target: "axum", "🏭 生产环境日志已初始化 - JSON 格式");
 }

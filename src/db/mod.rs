@@ -1,7 +1,8 @@
 pub mod models;
-mod queue;
 
+mod queue;
 pub use queue::*;
+pub mod user;
 
 use std::time::Duration;
 
@@ -18,7 +19,12 @@ pub async fn create_pool() -> sqlx::SqlitePool {
     sqlx::query(models::PrintQueue::create_table_sql())
         .execute(&pool)
         .await
-        .expect("创建表失败！！！");
+        .expect("创建print_queue表失败！！！");
+
+    sqlx::query(models::User::create_table_sql())
+        .execute(&pool)
+        .await
+        .expect("创建user表失败!!!");
 
     pool
 }

@@ -8,6 +8,7 @@ use crate::{AppState, hander};
 pub fn auth_router() -> Router<AppState> {
     Router::new()
         .route("/login", post(hander::api::auth::login))
+        .route("/register", post(hander::api::auth::register))
         .route("/qrcode", get(hander::api::qrcode_get))
 }
 

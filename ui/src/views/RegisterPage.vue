@@ -28,6 +28,7 @@
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { register } from '@/api/auth'
 
 const router = useRouter()
 const form = reactive({
@@ -37,17 +38,25 @@ const form = reactive({
   confirmPassword: ''
 })
 
-const handleRegister = () => {
+const handleRegister = async () => {
   if (!form.username || !form.email || !form.password) {
     ElMessage.error('请填写所有字段')
     return
   }
-  
+
   if (form.password !== form.confirmPassword) {
     ElMessage.error('两次输入的密码不一致')
     return
   }
-  
+  const data = {
+    username: form.username,
+    password: form.password,
+    email: form.email
+  }
+
+  let res = await register(data)
+  console.log("res:", res);
+
   ElMessage.success('注册成功')
   router.push('/login')
 }

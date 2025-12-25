@@ -1,0 +1,73 @@
+#!/bin/sh
+set -e
+
+#DEBHELPER#
+
+# 配置参数
+SERVICE_NAME="web-rust-print"
+WORKING_DIR="/var/lib/${SERVICE_NAME}"
+TEMPLATE_FILE="/usr/share/${SERVICE_NAME}/web-rust-print.service.in"
+SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+
+echo "正在动态生成 systemd 服务文件..."
+
+# 1. 检查模板文件是否存在
+if [ ! -f "$TEMPLATE_FILE" ]; then
+    # 如果没有模板，使用内嵌模板
+    cat > /tmp/service-template.in << 'EOF'
+[Unit]
+Description=Web Rust Print Server (Axum + SQLite)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=@WORKING_DIR@
+ExecStart=/usr/bin/web_rust_print
+Restart=always
+RestartSec=5
+
+# 安全加固
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=@WORKING_DIR@
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    TEMPLATE_FILE="/tmp/service-template.in"
+fi
+
+# 2. 动态生成服务文件
+sed \
+    -e "s|@WORKING_DIR@|${WORKING_DIR}|g" \
+    -e "s|@SERVICE_NAME@|${SERVICE_NAME}|g" \
+    "$TEMPLATE_FILE" > "$SERVICE_FILE"
+
+# 3. 设置服务文件权限
+chmod 644 "$SERVICE_FILE"
+echo "已生成服务文件: $SERVICE_FILE"
+
+# 4. 创建数据目录（使用当前用户）
+mkdir -p "$WORKING_DIR"
+# 获取当前安装/运行脚本的用户
+if [ "$(id -u)" -eq 0 ]; then
+    # 如果是root用户，使用当前登录用户（如果有）或者创建目录给root
+    CURRENT_USER=${SUDO_USER:-$USER}
+    if [ -n "$CURRENT_USER" ] && [ "$CURRENT_USER" != "root" ]; then
+        chown "$CURRENT_USER:" "$WORKING_DIR"
+    fi
+fi
+chmod 755 "$WORKING_DIR"
+
+# 5. 重新加载 systemd 并启用服务
+systemctl daemon-reload
+
+# 仅在首次安装时启用服务
+if [ "$1" = "configured" ] || [ "$1" = "1" ]; then
+    systemctl enable "$SERVICE_NAME" 2>/dev/null || true
+    echo "服务已启用（开机自启）"
+fi
+
+echo "服务配置完成"
+exit 0

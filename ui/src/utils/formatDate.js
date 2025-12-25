@@ -77,4 +77,4 @@ const calculateMonthDay = (year, dayOfYear) => {
     return [12, remainingDays];
 };
 
-export default formatDate
+export { formatDate, parseArrayDate }

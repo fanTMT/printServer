@@ -3,6 +3,28 @@ name = "psr"
 version = "0.1.0"
 edition = "2024"
 build = "build.rs"
+license = "GPL3"
+readme = "readme.md"
+
+[package.metadata.deb]
+name = "web-rust-print"
+maintainer = "番茄是水果 <li0shang@163.com>"
+extended-description = "Rust+Axum开发的打印中转服务"
+license-file = ["LICENSE", "644"]
+depends = "$auto"
+maintainer-scripts = "debian/"
+assets = [
+    [
+        "target/release/psr",
+        "/usr/bin/web_rust_print",
+        "755",
+    ],
+    [
+        "debian/web-rust-print.service.in",
+        "/usr/share/web-rust-print/web-rust-print.service.in",
+        "644",
+    ],
+]
 
 [dependencies]
 anyhow = "1.0"
@@ -33,3 +55,8 @@ cookie = "0.18.1"
 uuid = { version = "1.19.0", features = ["v4"] }
 futures-core = "0.3.31"
 lazy_static = "1.5.0"
+openssl-sys = { version = "0.9", features = ["vendored"] , optional = true}
+
+[features]
+default = []
+release = ["openssl-sys"]
