@@ -14,7 +14,7 @@ pub async fn auth_middleware(
     let auth_header = req
         .headers()
         .get("Authorization")
-        .ok_or(AuthError::MissingCredentials("缺少令牌".to_string()))? // 无 Header → 缺少令牌
+        .ok_or(AuthError::MissingCredentials("缺少令牌".to_string()))?
         .to_str()
         .map_err(|_| AuthError::InvalidToken)?; // Header
     let token = auth_header

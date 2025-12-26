@@ -23,7 +23,6 @@ pub async fn user_login(
         .bind(username)
         .fetch_one(db)
         .await?;
-    // verify 会从 stored_hash 中提取盐和成本因子，用相同规则验证输入密码
     let is_match = bcrypt::verify(&password, &queue.password)?;
     if !is_match {
         bail!("密码不匹配");
@@ -34,18 +33,18 @@ pub async fn user_login(
 /// 注册用户
 pub async fn reg_user(db: &sqlx::Pool<sqlx::Sqlite>, user: super::models::User) -> Result<User> {
     let ok =
-        sqlx::query("INSERT INTO users (username,password,email,rules,avatar) VALUES (?,?,?,?,?)")
+        sqlx::query("INSERT INTO users (username,password,email,roles,avatar) VALUES (?,?,?,?,?)")
             .bind(user.username)
             .bind(user.password)
             .bind(user.email)
-            .bind(user.rules)
+            .bind(user.roles)
             .bind(user.avatar)
             .execute(db)
             .await?;
     info!(target: "axum","插入行的ID:{:#?}", ok.last_insert_rowid());
     let new_user = sqlx::query_as::<_, User>(
         r#"
-        SELECT id, username, password, email, rules, avatar
+        SELECT *
         FROM users
         WHERE id = ?
         "#,

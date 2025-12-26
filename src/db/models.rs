@@ -84,7 +84,7 @@ pub struct User {
     // 密码
     pub password: String,
     // 用户组
-    pub rules: String,
+    pub roles: String,
     // 昵称
     pub avatar: String,
 }
@@ -98,7 +98,7 @@ impl User {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
-            rules TEXT NOT NULL,
+            roles TEXT NOT NULL,
             avatar TEXT,
             email TEXT
         )"#
@@ -112,7 +112,7 @@ impl Default for User {
             username: Default::default(),
             email: Default::default(),
             password: Default::default(),
-            rules: "user".to_string(),
+            roles: "user".to_string(),
             avatar: Default::default(),
         }
     }

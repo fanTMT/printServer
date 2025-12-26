@@ -177,23 +177,20 @@ const delAll = () => {
 const upSet = async () => {
   const data = {
     "isauto": printAuto.value,
-    "orientation": printDirection.value,
+    "orientation": Number(printDirection.value),
     "page_size": selectedSize.value,
     "printer": printer.value,
   };
 
-  console.log("data:", data);
+  console.log("更新设置:", data);
 
   isLoading.value = true;
   errorMsg.value = '';
   try {
     const res = await set_setting(data);
-    // console.log("打印队列:", res.data, res.data.code);
+    console.log("【Admin.vue】更新设置:", res.data, res);
     if (res.success && res.code == 200) {
-      printQueue.value = res.data.sort((a, b) =>
-        new Date(b.created_at) - new Date(a.created_at)
-      );
-      // console.log("获取打印队列", printQueue.value[0]);
+      console.log("更新完成!");
     } else {
       errorMsg.value = '获取打印队列失败：' + (res.message || '服务端异常');
     }

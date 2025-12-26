@@ -14,6 +14,7 @@ use axum::{
     response::IntoResponse,
 };
 use rust_embed::RustEmbed;
+use tracing::debug;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -41,8 +42,8 @@ async fn handle_asset(
     let possible_paths = [&filename, &format!("static/{}", filename)];
     // 尝试所有可能的路径
     for &path in &possible_paths {
-        println!("尝试查找资源: {}", path);
-
+        // println!("尝试查找资源: {}", path);
+        debug!("尝试查找资源: {}", path);
         if let Some(content) = Asset::get(path) {
             // 确定MIME类型
             let mime_type = mime_guess::from_path(path).first_or_octet_stream();
@@ -67,7 +68,8 @@ async fn handle_asset(
         }
     }
     // 如果所有路径都找不到资源
-    println!("资源未找到: {:?}", possible_paths);
+    // println!("资源未找到: {:?}", possible_paths);
+    debug!("资源未找到: {:?}", possible_paths);
     (
         StatusCode::NOT_FOUND,
         [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],

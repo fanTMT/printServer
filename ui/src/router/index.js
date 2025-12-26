@@ -71,7 +71,7 @@ router.beforeEach((to, from, next) => {
 
   // 设置页面标题
   if (to.meta.title) {
-    document.title = `${to.meta.title} - Vue3+Rust`
+    document.title = `${to.meta.title} - 🍅打印服务`
   }
 
   // 无需登录的页面直接放行

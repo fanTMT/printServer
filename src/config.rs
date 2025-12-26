@@ -75,15 +75,12 @@ pub struct LogConfig {
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)] // 自动生成版本/帮助信息
 pub struct Args {
-    /// 端口（可选，默认3000）
+    /// 端口（可选）
     #[arg(short = 'p', long = "port", default_value_t = 3000)]
     port: u32,
     /// 公网IP（可选）
     #[arg(short = 'i', long = "ip")]
     ip: Option<String>,
-    /// 是否显示详细信息
-    #[arg(short, long)]
-    pub debug: bool,
 }
 
 /// 将配置保存到文件（覆盖原文件）
@@ -124,57 +121,41 @@ pub fn default_config_path() -> anyhow::Result<std::path::PathBuf> {
 }
 
 /// 生成默认配置文件
-pub fn generate_default_config<P: AsRef<Path>>(path: P) -> anyhow::Result<()> {
+pub fn generate_default_config<P: AsRef<Path>>(
+    path: P,
+    Args { port, ip }: Args,
+) -> anyhow::Result<()> {
     let local_ipv4 = get_local_ip().expect("获取本地IP失败！！！");
-    let default_config = match Args::parse().ip {
-        None => Config {
-            app: AppConfig {
-                ip: local_ipv4.unwrap_or("localhost".to_string()),
-                port: 3000,
-                public_ip: None,
-            },
-            database: DatabaseConfig {
-                url: "sqlite:apps.db".to_string(),
-                max_connections: 5,
-                timeout: 5000,
-            },
-            log: LogConfig {
-                level: "warn".to_string(),
-                file_path: "./logs/app.log".to_string(),
-            },
-            printer: Printer {
-                enabled_auto_print: true,
-                printer: "".to_string(),
-                page_size: "A4".to_string(),
-                orientation: 4,
-                page_ranges: None,
-            },
+    let logspath = dirs::config_dir()
+        .context("无法获取系统配置目录")?
+        .join("printerAxum/logs")
+        .to_string_lossy()
+        .to_string(); // 应用专属目录
+    fs::create_dir_all(&logspath).context("无法创建logs目录")?;
+
+    let default_config = Config {
+        app: AppConfig {
+            ip: local_ipv4.unwrap_or("localhost".to_string()),
+            port,
+            public_ip: ip,
         },
-        Some(ip) => Config {
-            app: AppConfig {
-                ip: local_ipv4.unwrap_or("localhost".to_string()),
-                port: 3000,
-                public_ip: Some(ip.to_string()),
-            },
-            database: DatabaseConfig {
-                url: "sqlite:apps.db".to_string(),
-                max_connections: 5,
-                timeout: 5000,
-            },
-            log: LogConfig {
-                level: "warn".to_string(),
-                file_path: "./logs/app.log".to_string(),
-            },
-            printer: Printer {
-                enabled_auto_print: true,
-                printer: "".to_string(),
-                page_size: "A4".to_string(),
-                orientation: 4,
-                page_ranges: None,
-            },
+        database: DatabaseConfig {
+            url: "sqlite:apps.db?mode=rwc".to_string(),
+            max_connections: 20,
+            timeout: 2000,
+        },
+        log: LogConfig {
+            level: "info".to_string(),
+            file_path: logspath,
+        },
+        printer: Printer {
+            enabled_auto_print: true,
+            printer: "".to_string(),
+            page_size: "A4".to_string(),
+            orientation: 4,
+            page_ranges: None,
         },
     };
-
     // 序列化为 TOML 字符串
     let toml_str = toml::to_string_pretty(&default_config)?;
     // 写入文件
@@ -189,11 +170,9 @@ pub fn init_config() -> anyhow::Result<Config> {
     // 检查配置文件是否存在，不存在则生成默认配置
     if !config_path.exists() {
         println!("配置文件不存在，生成默认配置...");
-        tracing::info!(target: "axum_web_app","配置文件不存在,生成默认配置文件。{:#?}",config_path);
-        generate_default_config(&config_path)?;
+        generate_default_config(&config_path, Args::parse())?;
     }
-    // 加载配置-------
     let config = load_config(config_path)?;
-    // println!("{:#?}", config);
+    // println!("加载配置------- {:#?}", config);
     Ok(config)
 }

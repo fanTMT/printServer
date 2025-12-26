@@ -1,7 +1,8 @@
 use axum::{Json, extract::State};
 use bcrypt::DEFAULT_COST;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{Value, json};
+use tracing::info;
 
 use crate::{
     AppState,
@@ -13,15 +14,6 @@ use crate::{
 pub struct LoginReq {
     username: String,
     password: String,
-}
-
-#[derive(Debug, Serialize)]
-pub struct UserModel {
-    id: usize,
-    username: String,
-    email: String,
-    avatar: String,
-    rules: Vec<String>,
 }
 
 pub async fn login(
@@ -64,32 +56,27 @@ pub async fn register(
         .map_err(|_| AuthError::TokenCreation("哈希密码生成失败".to_string()))?;
 
     // TODO: 保存用户到数据库
-    println!(
+    info!(
         "注册用户: {}, 密码哈希: {}",
         payload.username, password_hash
     );
-    db::user::reg_user(
-        state.db_pool.as_ref(),
-        User {
-            id: 0,
-            username: payload.username.clone(),
-            password: password_hash,
-            email: payload.email,
-            avatar: "".to_string(),
-            rules: "".to_string(),
-        },
-    )
-    .await?;
-    let token = state.jwt_config.generate_token(&payload.username, "1")?;
+    let mut user = User {
+        username: payload.username.clone(),
+        password: password_hash,
+        email: payload.email,
+        ..Default::default()
+    };
+    if payload.username == "admin" {
+        user.roles = "admin".to_string();
+        user.avatar = "管理员".to_string();
+    }
+    let user = db::user::reg_user(state.db_pool.as_ref(), user).await?;
+    let token = state
+        .jwt_config
+        .generate_token(&user.username, &user.id.to_string())?;
     let res = json!({
         "data":{
-            "user": UserModel{
-                id: 1,
-                username: "admin".to_string(),
-                email: "li0shang@163.com".to_string(),
-                avatar: "https://foruda.gitee.com/avatar/1756372673422545498/7660892_li0shang_1756372673.png".to_string(),
-                rules: vec!["admin".to_string()],
-            },
+            "user": user,
             "token":token,
         },
         "code":200

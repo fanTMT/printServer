@@ -5,9 +5,9 @@ use tracing::info;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    logger::init_logger();
     let config = config::init_config()?;
-    let pool = db::create_pool().await;
+    logger::init_logger(&config);
+    let pool = db::create_pool(&config).await;
     info!("启动 Sqlite 数据库...");
     run(pool, config).await?;
     Ok(())

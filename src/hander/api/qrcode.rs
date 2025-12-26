@@ -12,10 +12,10 @@ pub async fn qrcode_get(State(state): State<AppState>) -> impl IntoResponse {
     let config = state.config.read().unwrap();
     // 构建移动端页面URL：http://IP:Port/mobile
     let mobile_url = if let Some(public_ip) = config.app.public_ip.clone() {
-        info!(target: "axum_web_app","使用公网IP-> http://{}/#/", public_ip);
+        info!(target: "axum_web_app","使用公网IP-> http://{}", public_ip);
         format!("http://{}/mobile", public_ip)
     } else {
-        info!(target: "axum_web_app","使用内网IP-> http://{}:{}/#/", config.app.ip, config.app.port);
+        info!(target: "axum_web_app","使用内网IP-> http://{}:{}", config.app.ip, config.app.port);
         format!("http://{}:{}/#/", config.app.ip, config.app.port)
     };
     match generate_qr_code(&mobile_url) {

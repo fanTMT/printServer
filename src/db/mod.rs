@@ -6,13 +6,15 @@ pub mod user;
 
 use std::time::Duration;
 
-pub async fn create_pool() -> sqlx::SqlitePool {
+use crate::config::Config;
+
+pub async fn create_pool(config: &Config) -> sqlx::SqlitePool {
     let pool = sqlx::sqlite::SqlitePoolOptions::new()
-        .max_connections(20)
+        .max_connections(config.database.max_connections)
         .acquire_timeout(Duration::from_secs(5))
         .idle_timeout(Duration::from_secs(300))
-        .max_lifetime(Duration::from_secs(1800))
-        .connect("sqlite:apps.db?mode=rwc")
+        .max_lifetime(Duration::from_secs(config.database.timeout))
+        .connect(&config.database.url)
         .await
         .unwrap();
 
