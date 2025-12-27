@@ -1,4 +1,60 @@
-第一次使用请手动注册 admin用户 密码自定
+## 第一次使用请手动注册 admin用户 密码自定
+
+### **打印设置选项**
+
+```bash
+-n num-copies # 指定打印份数 # 示例：lp -n 3 presentation.pdf
+
+-P page-list # 指定要打印的页面列表 # 示例：lp -P 1,3,5-10 doc.pdf # 打印1,3,5-10页 # 示例：lp -P 1-5,8 doc.pdf # 打印1-5页和第8页
+
+-q priority # 指定作业优先级（1-100）# 示例：lp -q 90 urgent.pdf # 高优先级 # 示例：lp -q 10 draft.pdf # 低优先级
+
+```
+
+### **打印机特定选项（-o）**
+
+这些是传递给打印机的具体设置：
+
+```bash
+
+# 封面/分隔页
+
+-o job-sheets=standard # 打印带有作业信息的封面页
+-o job-sheets=none # 不打印封面页
+
+# 纸张设置
+
+-o media=size # 指定纸张尺寸 # 示例：lp -o media=A4 doc.pdf # 示例：lp -o media=Letter doc.pdf # 示例：lp -o media=legal doc.pdf # 示例：lp -o media=a5 doc.pdf
+
+# 页面布局
+
+-o number-up=N # 每张纸上打印 N 个页面（支持：1, 2, 4, 6, 9, 16）# 示例：lp -o number-up=2 notes.pdf # 2合1打印
+
+-o orientation-requested=N # 指定页面方向 # 3 = 纵向（Portrait）# 4 = 横向（Landscape）# 示例：lp -o orientation-requested=4 wide.pdf
+
+# 打印质量
+
+-o print-quality=N # 指定打印质量 # 3 = 草稿（Draft）# 4 = 普通（Normal）# 5 = 最佳（Best）# 示例：lp -o print-quality=5 photo.jpg
+
+# 双面打印
+
+-o sides=one-sided # 单面打印（默认）# 示例：lp -o sides=one-sided doc.pdf
+
+-o sides=two-sided-long-edge # 双面打印，纵向（像书本一样翻页）# 示例：lp -o sides=two-sided-long-edge book.pdf
+
+-o sides=two-sided-short-edge # 双面打印，横向（像日历一样翻页）# 示例：lp -o sides=two-sided-short-edge landscape.pdf
+
+```
+
+### **作业标识选项**
+
+```bash
+
+-t title # 指定作业标题（显示在队列中）# 示例：lp -t "Q3 Financial Report" report.pdf
+
+-s # 静默模式，不显示作业ID # 示例：lp -s document.pdf
+
+```
 
 # 远程共享打印服务 功能大纲
 
@@ -95,3 +151,7 @@
    - [ ] 操作指南：内置图文 / 视频教程，指导用户添加打印机、提交任务等基础操作
    - [ ] 在线客服：提供在线咨询入口，解决用户使用过程中的问题
    - [ ] 常见问题（FAQ）：汇总高频问题及解决方案，方便用户快速查询
+
+```
+
+```

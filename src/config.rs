@@ -53,7 +53,8 @@ pub struct Printer {
     pub printer: String,
     // 默认打印大小 A4
     pub page_size: String,
-    // 默认方向 // 方向 `3` 横向，`4` 纵向
+    // # 3 = 纵向（Portrait）
+    // # 4 = 横向（Landscape）
     pub orientation: u64,
     // 打印的页码
     pub page_ranges: Option<Vec<u64>>,
@@ -152,7 +153,7 @@ pub fn generate_default_config<P: AsRef<Path>>(
             enabled_auto_print: true,
             printer: "".to_string(),
             page_size: "A4".to_string(),
-            orientation: 4,
+            orientation: 3,
             page_ranges: None,
         },
     };
