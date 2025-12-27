@@ -362,8 +362,7 @@
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ElMessageBox } from 'element-plus/es/components/message-box/index.mjs';
-import { upload } from '@/api/auth';
-import { get_setting } from '@/api/api';
+import { get_setting, upload } from '@/api/api';
 
 // 重命名为 confirm 方便使用
 const ElConfirm = ElMessageBox.confirm;

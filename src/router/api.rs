@@ -5,6 +5,7 @@ use axum::{
 
 use crate::{AppState, hander};
 
+/// 不验证token /api/auth/
 pub fn auth_router() -> Router<AppState> {
     Router::new()
         .route("/login", post(hander::api::auth::login))
@@ -12,9 +13,10 @@ pub fn auth_router() -> Router<AppState> {
         .route("/qrcode", get(hander::api::qrcode_get))
 }
 
+/// 验证token /api/
 pub fn api_router() -> Router<AppState> {
     Router::new()
-        .route("/get_setting", get(hander::api::get_setting))
-        .route("/set_setting", post(hander::api::set_setting))
-        .route("/get_printer", get(hander::api::get_printer))
+        .route("/setting", get(hander::api::get_setting))
+        .route("/setting", post(hander::api::set_setting))
+        .route("/printer", get(hander::api::get_printer))
 }

@@ -61,19 +61,3 @@ export function updateUserInfo(data) {
   })
 }
 
-// 上传文件
-export function upload(data) {
-  return request({
-    url: '/api/upload',
-    method: 'post',
-    data
-  })
-}
-
-// 获取打印机列表以及状态
-export function getprinter() {
-  return request({
-    url: '/api/get_printer',
-    method: 'get',
-  })
-}

@@ -11,7 +11,7 @@ export function get_all() {
 // 更新设置
 export function set_setting(data) {
   return request({
-    url: '/api/set_setting',
+    url: '/api/setting',
     method: 'post',
     data,
   })
@@ -20,7 +20,24 @@ export function set_setting(data) {
 // 获取设置
 export function get_setting() {
   return request({
-    url: '/api/get_setting',
+    url: '/api/setting',
     method: 'get',
+  })
+}
+
+// 获取打印机列表以及状态
+export function getprinter() {
+  return request({
+    url: '/api/printer',
+    method: 'get',
+  })
+}
+
+// 上传文件
+export function upload(data) {
+  return request({
+    url: '/api/upload',
+    method: 'post',
+    data
   })
 }

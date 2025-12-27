@@ -22,6 +22,7 @@ pub struct AppState {
     pub db_pool: Arc<sqlx::Pool<sqlx::Sqlite>>,
     // 全局配置（RwLock 允许多线程读写）
     pub config: Arc<RwLock<config::Config>>,
+    // jsonwebtoken
     pub jwt_config: Arc<jwt::JwtConfig>,
 }
 

@@ -5,14 +5,14 @@ use crate::config::Config;
 
 pub fn init_logger(config: &Config) {
     if config.log.level == "debug" {
-        init_dev();
+        init_dev(config);
     } else {
         init_pro(config);
     }
 }
 
 /// 开发环境日志配置 - 详细输出
-fn init_dev() {
+fn init_dev(config: &Config) {
     let filter = EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| "axum=debug,tower_http=debug,info".into());
 
@@ -23,9 +23,24 @@ fn init_dev() {
         .with_file(true) // 显示文件名
         .with_line_number(true); // 显示行号
 
+    println!("日志目录:{:?}", &config.log.file_path);
+    let file_appender = RollingFileAppender::builder()
+        .filename_prefix("printAxum")
+        .filename_suffix("debug.log")
+        .max_log_files(7)
+        .rotation(Rotation::DAILY)
+        .build(&config.log.file_path)
+        .expect("日志系统启动失败!!!");
+
+    let fmt_file = fmt::layer()
+        .json()
+        .with_ansi(false)
+        .with_writer(file_appender); // 绑定到文件写入器
+
     tracing_subscriber::registry()
         .with(filter)
         .with(fmt_layer)
+        .with(fmt_file)
         .init();
 
     tracing::info!("🚀 开发环境日志已初始化 - 详细模式");
@@ -51,7 +66,7 @@ fn init_pro(config: &Config) {
     let file_appender = RollingFileAppender::builder()
         .filename_prefix("printAxum")
         .filename_suffix("log")
-        .max_log_files(7)
+        .max_log_files(5)
         .rotation(Rotation::DAILY)
         .build(&config.log.file_path)
         .expect("日志系统启动失败!!!");
