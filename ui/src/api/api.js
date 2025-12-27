@@ -41,3 +41,12 @@ export function upload(data) {
     data
   })
 }
+
+// 打印文件
+export function print(data) {
+  return request({
+    url: '/print',
+    method: 'post',
+    data
+  })
+}

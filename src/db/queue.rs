@@ -1,4 +1,3 @@
-use anyhow::Result;
 use std::sync::Arc;
 use tracing::info;
 
@@ -69,7 +68,7 @@ pub async fn update_queue_item(
     status: String,
     original_name: String,
     db: &sqlx::Pool<sqlx::Sqlite>,
-) -> Result<bool> {
+) -> anyhow::Result<bool> {
     let result = sqlx::query("UPDATE print_queue SET status = ? WHERE original_name = ?")
         .bind(status)
         .bind(original_name)
@@ -80,7 +79,7 @@ pub async fn update_queue_item(
 }
 
 // 清空队列
-pub async fn clear_queue(pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<String> {
+pub async fn clear_queue(pool: &sqlx::Pool<sqlx::Sqlite>) -> anyhow::Result<String> {
     let result = sqlx::query("UPDATE print_queue SET status = $1 WHERE status = $2")
         .bind("打印完成")
         .bind("打印失败")
@@ -91,7 +90,7 @@ pub async fn clear_queue(pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<String> {
 }
 
 // 删除一个
-pub async fn delete_item(pool: Arc<sqlx::SqlitePool>, user_id: i64) -> Result<bool> {
+pub async fn delete_item(pool: Arc<sqlx::SqlitePool>, user_id: i64) -> anyhow::Result<bool> {
     let result = sqlx::query("DELETE FROM print_queue WHERE id = ?")
         .bind(user_id)
         .execute(pool.as_ref())
@@ -102,7 +101,7 @@ pub async fn delete_item(pool: Arc<sqlx::SqlitePool>, user_id: i64) -> Result<bo
 }
 
 // 全部删除
-pub async fn delete_all(pool: &sqlx::Pool<sqlx::Sqlite>) -> Result<String> {
+pub async fn delete_all(pool: &sqlx::Pool<sqlx::Sqlite>) -> anyhow::Result<String> {
     let result = sqlx::query("DELETE FROM print_queue").execute(pool).await?;
     // 判断是否成功删除了一行数据
     Ok(result.rows_affected().to_string())

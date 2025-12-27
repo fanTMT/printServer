@@ -1,38 +1,20 @@
-# app
 
-This template should help get you started developing with Vue 3 in Vite.
+# UI 模块文档
 
-## Recommended IDE Setup
+## 概述
+本项目是一个使用 Rust 开发的打印服务器用户界面模块。
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 功能特性
+- 用户界面设计和实现
+- 交互功能开发
+- 响应式布局
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
+## 安装
+在项目根目录运行：
+```bash
+cargo build --release
 ```
 
-### Compile and Hot-Reload for Development
+## 贡献指南
+欢迎提交 Pull Request 和问题报告。
 
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```

@@ -47,6 +47,8 @@ pub struct PrintValue {
     page_size: String, // 大小 A4（Rust 惯例使用蛇形命名法）
     #[serde(rename = "layout")]
     orientation: String, // 方向
+    #[serde(rename = "customPages")] // pageMode ["custom"|"all"]
+    custom_pages: String, // 方向页码
 }
 /// 打印文件
 pub async fn print(
@@ -55,7 +57,6 @@ pub async fn print(
 ) -> Result<impl IntoResponse, error::HttpError> {
     let p = state.db_pool.as_ref();
     let file = db::get_one(p, payload.filename.clone()).await?;
-    // info!(target: "axum_web_app","默认");
     utils::print_document(
         payload.filename.clone(),
         file.file_path.clone(),
@@ -64,7 +65,7 @@ pub async fn print(
     .await?;
     let b = db::update_queue_item("打印完成".to_string(), payload.filename, p).await?;
     if b {
-        info!(target: "axum_web_app" ,"打印了一个文件，{:#?}", file.original_name)
+        info!(target: "axum" ,"打印了一个文件，{:#?}", file.original_name)
     }
     Ok((
         axum::http::StatusCode::OK,

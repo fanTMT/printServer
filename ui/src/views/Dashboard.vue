@@ -18,9 +18,13 @@
             class="text-neutral-600 hover:text-primary transition-colors px-1 py-2">
             历史记录
           </router-link>
-          <router-link to="/admin" exact-active-class="active text-primary font-medium"
+          <router-link v-if="hasRole('admin')" to="/admin" exact-active-class="active text-primary font-medium"
             class="text-neutral-600 hover:text-primary transition-colors px-1 py-2">
             管理员设置
+          </router-link>
+          <router-link v-if="hasRole('user')" to="/abrod" exact-active-class="active text-primary font-medium"
+            class="text-neutral-600 hover:text-primary transition-colors px-1 py-2">
+            用户设置
           </router-link>
         </ul>
       </nav>
@@ -157,10 +161,10 @@
             <label class="block mb-2 font-medium text-sm text-gray-700">页面布局</label>
             <div class="flex flex-wrap gap-4">
               <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="layout" value="portrait" v-model="layout" checked class="cursor-pointer"> 纵向
+                <input type="radio" name="layout" value="3" v-model="layout" checked class="cursor-pointer"> 纵向
               </label>
               <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="layout" value="landscape" v-model="layout" class="cursor-pointer"> 横向
+                <input type="radio" name="layout" value="4" v-model="layout" class="cursor-pointer"> 横向
               </label>
             </div>
           </div>
@@ -362,10 +366,13 @@
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ElMessageBox } from 'element-plus/es/components/message-box/index.mjs';
-import { get_setting, upload } from '@/api/api';
+import { get_setting, print, upload } from '@/api/api';
+import { useUserStore } from '@/stores/user';
+
+const { hasRole, hasAnyRole } = useUserStore()
 
 // 重命名为 confirm 方便使用
-const ElConfirm = ElMessageBox.confirm;
+const ElConfirm = ElMessageBox;
 
 // ========== 类型定义 ==========
 /**
@@ -949,7 +956,6 @@ const removeFile = async (index) => {
   try {
     const file = uploadedFiles.value[index];
     if (!file) return;
-
     await ElConfirm({
       title: '确认删除',
       message: `确定要删除文件 "${file.name}" 吗？`,
@@ -1089,10 +1095,8 @@ const printFile = async (index) => {
     };
 
     console.log('发送打印请求:', printParams);
-
-    // 这里可以添加实际的打印接口调用
-    // 模拟打印成功
     ElMessage.success(`正在打印文件: ${file.name} (${count.value}份)`);
+    const res = await print(printParams);
 
     // 可以添加打印记录到历史记录
   } catch (error) {

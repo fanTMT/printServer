@@ -15,6 +15,20 @@ export const useUserStore = defineStore('user', () => {
   const userAvatar = computed(() => user.value?.avatar || '')
   const userRoles = computed(() => user.value?.roles || [])
 
+  // 查询是否是role这个权限组
+  const hasRole = (role) => {
+    console.log("所有权限", userRoles.value, role);
+    return userRoles.value.includes(role)
+  }
+
+  const hasAnyRole = (roles) => {
+    return roles.some(role => userRoles.value.includes(role))
+  }
+
+  const hasAllRoles = (roles) => {
+    return roles.every(role => userRoles.value.includes(role))
+  }
+
   // actions
   const setUser = (userData) => {
     user.value = userData;
@@ -97,6 +111,8 @@ export const useUserStore = defineStore('user', () => {
     initUserFromStorage();
   });
 
+
+
   return {
     user,
     token,
@@ -111,7 +127,10 @@ export const useUserStore = defineStore('user', () => {
     login,
     logout,
     clearUser,
-    initUserFromStorage
+    initUserFromStorage,
+    hasRole,
+    hasAnyRole,
+    hasAllRoles
   }
 }, {
   persist: {

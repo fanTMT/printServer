@@ -202,7 +202,7 @@ pub async fn upload_handler(
             // .expect("添加打印队列失败");
 
             if state.config.read().unwrap().printer.enabled_auto_print {
-                info!(target: "axum_web_app","自动打印已经打印中:{}",original_filename);
+                info!(target: "axum","自动打印已经打印中:{}",original_filename);
                 print_document(original_filename, save_path, state)
                     .await
                     .expect("打印有问题");

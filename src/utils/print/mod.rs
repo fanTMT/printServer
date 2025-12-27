@@ -9,18 +9,23 @@ pub async fn print_document(
     original_name: String,
     file_path: String,
     state: AppState,
-) -> Result<(), HttpError> {
+) -> Result<bool, HttpError> {
     print_file(file_path.as_str(), state.clone()).await?;
-    set_info("打印完成".to_string(), original_name, &state.db_pool).await;
-    Ok(())
+    set_info("打印完成".to_string(), original_name, &state.db_pool).await
 }
 
-async fn set_info(status: String, original_name: String, d: &Pool<sqlx::Sqlite>) {
-    let _a = db::update_queue_item(status, original_name, d).await;
+async fn set_info(
+    status: String,
+    original_name: String,
+    d: &Pool<sqlx::Sqlite>,
+) -> Result<bool, HttpError> {
+    db::update_queue_item(status, original_name, d)
+        .await
+        .map_err(HttpError::Internal)
 }
 
 #[cfg(target_os = "linux")]
-async fn print_file(file_path: &str, state: AppState) -> Result<(), HttpError> {
+async fn print_file(file_path: &str, state: AppState) -> Result<bool, HttpError> {
     let g = state.config.read().expect("Unable to read config");
     // 调试信息输出
     let mut cmd = Command::new("lp");
@@ -46,7 +51,7 @@ async fn print_file(file_path: &str, state: AppState) -> Result<(), HttpError> {
         file_path, g.printer.page_size, g.printer.orientation, g.printer.printer,cmd
     );
     cmd.output()?;
-    Ok(())
+    Ok(true)
 }
 
 // windows调用打印命令
@@ -150,6 +155,8 @@ pub struct Printer {
     /// 打印机状态（如 "自从 2025年12月06日 星期六 21时26分21秒 开始接受请求"）
     pub status: String,
 }
+
+/// 获取打印机列表
 #[cfg(target_os = "linux")]
 pub fn get_printers() -> Result<Vec<Printer>, HttpError> {
     // 执行 lpstat -a 命令
