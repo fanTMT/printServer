@@ -27,16 +27,23 @@ struct UploadResponse {
     message: String,
     file_name: Option<String>,
     file_path: Option<String>,
+    isauto: bool,
 }
 
 // 错误处理
-#[derive(Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum UploadError {
+    #[error("未找到文件")]
     NoFile,
+    #[error("无效的文件名")]
     InvalidFileName,
+    #[error("不支持的文件类型")]
     InvalidFileType,
+    #[error("文件大小超过限制:{0}")]
     FileTooLarge(usize),
+    #[error("{0}")]
     IoError(String),
+    #[error("{0}")]
     MultipartError(String),
 }
 
@@ -61,6 +68,7 @@ impl IntoResponse for UploadError {
             message,
             file_name: None,
             file_path: None,
+            isauto: false,
         };
 
         (status, Json(response)).into_response()
@@ -101,24 +109,6 @@ fn is_allowed_file_type(filename: &str) -> bool {
         .and_then(|ext| SUPPORTED_EXT.get(ext.as_str())) // 查找带点的小写扩展名
         .copied()
         .unwrap_or(false)
-}
-
-impl From<UploadError> for (StatusCode, String) {
-    fn from(error: UploadError) -> Self {
-        match error {
-            UploadError::NoFile => (StatusCode::BAD_REQUEST, "未找到文件".to_string()),
-            UploadError::InvalidFileName => (StatusCode::BAD_REQUEST, "无效的文件名".to_string()),
-            UploadError::InvalidFileType => {
-                (StatusCode::BAD_REQUEST, "不支持的文件类型".to_string())
-            }
-            UploadError::FileTooLarge(max_size) => (
-                StatusCode::PAYLOAD_TOO_LARGE,
-                format!("文件大小超过限制: {}MB", max_size / 1024 / 1024),
-            ),
-            UploadError::IoError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
-            UploadError::MultipartError(msg) => (StatusCode::BAD_REQUEST, msg),
-        }
-    }
 }
 
 // 文件上传处理器
@@ -179,11 +169,12 @@ pub async fn upload_handler(
                 .map_err(|e| UploadError::IoError(format!("写入文件失败: {}", e)))?;
 
             // 返回成功响应 - 关键修改：直接返回 Json，不需要 (StatusCode, Json)
-            let response = UploadResponse {
+            let mut response = UploadResponse {
                 success: true,
                 message: "文件上传成功".to_string(),
                 file_name: Some(original_filename.clone()),
                 file_path: Some(save_path.clone()),
+                isauto: false,
             };
 
             let item = db::models::PrintQueue {
@@ -201,11 +192,18 @@ pub async fn upload_handler(
                 .map_err(|e| UploadError::IoError(format!("添加打印队列失败: {}", e)))?;
             // .expect("添加打印队列失败");
 
-            if state.config.read().unwrap().printer.enabled_auto_print {
+            if state
+                .config
+                .read()
+                .map_err(|e| UploadError::IoError(format!("读取配置失败: {}", e)))?
+                .printer
+                .enabled_auto_print
+            {
                 info!(target: "axum","自动打印已经打印中:{}",original_filename);
                 print_document(original_filename, save_path, state)
                     .await
                     .expect("打印有问题");
+                response.isauto = true;
             }
             return Ok(Json(response));
         }

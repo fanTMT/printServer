@@ -34,7 +34,7 @@ pub async fn create_router(state: AppState) -> anyhow::Result<Router> {
     let router = Router::new()
         .merge(public_routes) // 公开路由（无中间件）
         .merge(protected_routes) // 受保护路由（有中间件）
-        .layer(DefaultBodyLimit::max(10 * 1024 * 1024)) // 全局上传限制 10MB
+        .layer(DefaultBodyLimit::max(20 * 1024 * 1024)) // 全局上传限制 20MB
         .with_state(state);
 
     Ok(router)

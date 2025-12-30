@@ -60,34 +60,47 @@
         <!-- 空状态 -->
         <div v-else-if="printQueue.length === 0"
           class="p-5 border border-gray-200 rounded-md text-center text-gray-600 mb-4">打印队列为空</div>
-        <!-- 队列列表 -->
+        <!-- 队列列表 - 垂直滚动 -->
         <div v-if="printQueue.length > 0" class="mb-4">
-          <div class="flex items-center justify-between p-3.5 mb-2 bg-white rounded-md shadow-sm border border-gray-100"
-            v-for="item in printQueue" :key="item.id">
-            <!-- 文件信息（图标+名称） -->
-            <div class="flex items-center gap-3 flex-1 max-w-[200px]">
-              <div class="w-9 h-9 rounded-md flex items-center justify-center text-white font-semibold"
-                :class="getFileTypeClass(item.original_name)">
-                {{ getFileExtension(item.original_name) }}
-              </div>
-              <div class="text-sm text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
-                {{ item.original_name || '未命名文件' }}
-              </div>
-            </div>
+          <!-- 添加容器标题 -->
+          <div class="flex items-center justify-between mb-3 px-1">
+            <h3 class="text-sm font-semibold text-gray-700">打印队列 ({{ printQueue.length }})</h3>
+            <span class="text-xs text-gray-500">滑动查看更多</span>
+          </div>
 
-            <!-- 元信息（大小+时间+状态） -->
-            <div class="flex flex-col items-end gap-1 text-xs text-gray-500 mr-5">
-              <div>{{ item.file_size }}</div>
-              <div>{{ formatDate(item.created_at) }}</div>
-              <div class="text-gray-400">{{ getStatusText(item.status) }}</div>
-            </div>
+          <!-- 滚动容器（固定高度） -->
+          <div
+            class="max-h-[400px] overflow-y-auto pr-2 space-y-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+            <div
+              class="flex items-center justify-between p-3.5 bg-white rounded-md shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
+              v-for="item in printQueue" :key="item.id">
+              <!-- 文件信息（图标+名称） -->
+              <div class="flex items-center gap-3 flex-1 max-w-[200px]">
+                <div class="w-9 h-9 rounded-md flex items-center justify-center text-white font-semibold flex-shrink-0"
+                  :class="getFileTypeClass(item.original_name)">
+                  {{ getFileExtension(item.original_name) }}
+                </div>
+                <div class="text-sm text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+                  {{ item.original_name || '未命名文件' }}
+                </div>
+              </div>
 
-            <!-- 操作按钮 -->
-            <div>
-              <button @click="viewFile(item)" :disabled="!item.file_path"
-                class="px-3.5 py-1.5 text-xs bg-gray-200 text-gray-700 rounded-md cursor-default border-0">
-                {{ getStatusText(item.status) }}
-              </button>
+              <!-- 元信息（大小+时间+状态） -->
+              <div class="flex flex-col items-end gap-1 text-xs text-gray-500 mr-5">
+                <div>{{ item.file_size }}</div>
+                <div>{{ formatDate(item.created_at) }}</div>
+                <div :class="getStatusColor(item.status)">
+                  {{ getStatusText(item.status) }}
+                </div>
+              </div>
+
+              <!-- 操作按钮 -->
+              <div>
+                <button @click="viewFile(item)" :disabled="!item.file_path"
+                  class="px-3.5 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors duration-200 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {{ getStatusText(item.status) }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -212,6 +225,19 @@ const printAll = () => {
 const viewFile = (item) => {
   console.log('查看文件:', item);
 };
+
+// 根据状态返回对应的颜色类名
+const getStatusColor = (status) => {
+  const statusColors = {
+    'pending': 'text-yellow-500',
+    'processing': 'text-blue-500',
+    'completed': 'text-green-500',
+    'failed': 'text-red-500',
+    'cancelled': 'text-gray-500'
+  };
+  // 如果没有匹配的状态，返回默认颜色
+  return statusColors[status] || 'text-gray-400';
+}
 
 // 获取打印机列表
 const getPrinters = async () => {

@@ -2,11 +2,19 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import { visualizer } from 'rollup-plugin-visualizer'
+
 
 export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
+    visualizer({
+      filename: 'dist/stats.html',
+      open: true,
+      gzipSize: true,
+      brotliSize: true
+    })
   ],
   resolve: {
     alias: {
@@ -29,31 +37,55 @@ export default defineConfig({
   },
   // 添加构建配置来优化包大小
   build: {
-    // 提高块大小警告限制
     chunkSizeWarningLimit: 1000,
-
-    // Rollup 配置来优化分包
     rollupOptions: {
-      // 将 pdfjs-dist 标记为外部依赖，避免打包
-      external: ['pdfjs-dist'],
-
       output: {
-        // 手动分包策略
         manualChunks(id) {
-          // 分离 node_modules 中的依赖
           if (id.includes('node_modules')) {
-            // Vue 相关
-            if (id.includes('vue')) {
-              return 'vue-vendor'
+            // Vue 核心
+            if (id.includes('vue') && !id.includes('vue-router') && !id.includes('pinia')) {
+              return 'vue-core'
             }
-            // Element Plus 相关
+            // Vue Router
+            if (id.includes('vue-router')) {
+              return 'vue-router'
+            }
+            // Pinia
+            if (id.includes('pinia')) {
+              return 'pinia'
+            }
+            // Element Plus - 按需加载的可以单独分包
             if (id.includes('element-plus')) {
-              return 'element-plus-vendor'
+              if (id.includes('element-plus/es/components')) {
+                // Element Plus 的组件单独分块，便于按需加载
+                const match = id.match(/element-plus\/es\/components\/([^/]+)/)
+                if (match) {
+                  return `element-plus-${match[1]}`
+                }
+              }
+              return 'element-plus-core'
             }
-            // 其他第三方库
+            // 其他大体积库
+            if (id.includes('lodash') || id.includes('lodash-es')) {
+              return 'lodash'
+            }
+            if (id.includes('axios')) {
+              return 'axios'
+            }
+            if (id.includes('echarts')) {
+              return 'echarts'
+            }
+            if (id.includes('xlsx') || id.includes('sheetjs')) {
+              return 'xlsx'
+            }
+            // 默认归为 vendor
             return 'vendor'
           }
-        }
+        },
+        // 设置 chunk 文件名格式
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
   }
