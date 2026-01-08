@@ -64,6 +64,7 @@
               class="flex flex-col sm:flex-row items-start sm:items-center p-3 border border-gray-100 rounded-md mb-2 hover:bg-gray-50 transition-colors cursor-pointer"
               :class="{ 'bg-blue-50 border-blue-500': activeFileIndex === index }"
               v-for="(file, index) in uploadedFiles" :key="index" @click="switchActiveFile(index)">
+
               <!-- 文件类型图标 -->
               <div class="text-xl w-6 text-center mr-3 mb-2 sm:mb-0">
                 <span v-if="file.rawFile.type?.includes('pdf')">📄</span>
@@ -102,10 +103,21 @@
                   <i v-if="file.uploading" class="fa fa-spinner fa-spin mr-1"></i>
                   {{ file.uploading ? '上传中' : (file.uploaded ? '已上传' : '上传') }}
                 </button>
+
+                <!-- 打印按钮 -->
                 <button class="px-2 py-1 bg-green-600 text-white rounded-md text-sm hover:opacity-90 transition-opacity"
-                  @click.stop="printFile(index)" :disabled="!file.uploaded || file.uploading"
-                  :class="{ 'opacity-60 cursor-not-allowed': !file.uploaded || file.uploading }" title="发送到打印机">
-                  打印
+                  @click.stop="printFile(index)" :disabled="!file.uploaded || file.uploading || file.printed" :class="{
+                    'opacity-60 cursor-not-allowed': !file.uploaded || file.uploading || file.printed,
+                    'bg-gray-400': file.printed  // 打印后变为灰色
+                  }" title="发送到打印机">
+                  <!-- 根据状态显示不同内容 -->
+                  <template v-if="file.printing">
+                    <i class="fa fa-spinner fa-spin mr-1"></i>
+                    打印中
+                  </template>
+                  <template v-else>
+                    {{ file.printed ? '已打印' : '打印' }}
+                  </template>
                 </button>
               </div>
             </div>
@@ -344,8 +356,8 @@
                 'text-sm': textFontSize === 'md',
                 'text-base': textFontSize === 'lg'
               }">
-              {{ textContent || '无文本内容' }}
-            </pre>
+        {{ textContent || '无文本内容' }}
+      </pre>
           </div>
 
           <!-- 不支持预览的文件 -->
@@ -1056,6 +1068,13 @@ const uploadFile = async (index) => {
         uploading: false,
         uploaded: true
       };
+      if (res.isauto) {
+        console.log('自动打印:', res.file_name);
+        uploadedFiles.value[index] = {
+          ...file,
+          printed: true
+        };
+      }
       ElMessage.success(`文件 "${file.name}" 上传成功！`);
     } else {
       throw new Error(res.message || '上传失败');
@@ -1097,7 +1116,6 @@ const printFile = async (index) => {
     console.log('发送打印请求:', printParams);
     ElMessage.success(`正在打印文件: ${file.name} (${count.value}份)`);
     const res = await print(printParams);
-
     // 可以添加打印记录到历史记录
   } catch (error) {
     ElMessage.error(`打印失败: ${error.message}`);

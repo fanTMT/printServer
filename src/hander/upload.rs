@@ -33,12 +33,16 @@ struct UploadResponse {
 // 错误处理
 #[derive(thiserror::Error, Debug)]
 pub enum UploadError {
+    /// 未找到文件
     #[error("未找到文件")]
     NoFile,
     #[error("无效的文件名")]
+    /// 无效的文件名
     InvalidFileName,
     #[error("不支持的文件类型")]
+    /// 不支持的文件类型
     InvalidFileType,
+    /// 文件大小超过限制
     #[error("文件大小超过限制:{0}")]
     FileTooLarge(usize),
     #[error("{0}")]
@@ -140,7 +144,7 @@ pub async fn upload_handler(
                 return Err(UploadError::InvalidFileType);
             }
             // 限制文件大小 (10MB)
-            let max_size = 10 * 1024 * 1024;
+            let max_size = state.config.read().unwrap().app.upload_max * 1024 * 1024;
             if field.size_hint().0 > max_size {
                 return Err(UploadError::FileTooLarge(max_size));
             }

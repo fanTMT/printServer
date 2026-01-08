@@ -2,26 +2,16 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
-import { visualizer } from 'rollup-plugin-visualizer'
-
-
 export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
-    visualizer({
-      filename: 'dist/stats.html',
-      open: true,
-      gzipSize: true,
-      brotliSize: true
-    })
   ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-  // 移除 pdfjs-dist 的优化依赖，因为它已通过 CDN 引入
   optimizeDeps: {
     // 如果有其他需要预构建的依赖，可以在这里添加
     // 例如：include: ['vue', 'vue-router', 'pinia'],

@@ -43,6 +43,7 @@ pub struct AppConfig {
     pub ip: String,
     pub port: u32,
     pub public_ip: Option<String>,
+    pub upload_max: usize,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -139,6 +140,7 @@ pub fn generate_default_config<P: AsRef<Path>>(
             ip: local_ipv4.unwrap_or("localhost".to_string()),
             port,
             public_ip: ip,
+            upload_max: 10,
         },
         database: DatabaseConfig {
             url: "sqlite:apps.db?mode=rwc".to_string(),
@@ -175,5 +177,12 @@ pub fn init_config() -> anyhow::Result<Config> {
     }
     let config = load_config(config_path)?;
     // println!("加载配置------- {:#?}", config);
+    println!("{:<15}{:?}MB", "最大上传文件大小:", config.app.upload_max);
+    println!("{:<15}{:?}", "日志文件目录:", config.log.file_path);
+    println!(
+        "是否开启上传自动打印-------{:?}",
+        config.printer.enabled_auto_print
+    );
+
     Ok(config)
 }
