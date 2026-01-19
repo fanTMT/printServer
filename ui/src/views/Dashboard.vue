@@ -173,10 +173,10 @@
             <label class="block mb-2 font-medium text-sm text-gray-700">页面布局</label>
             <div class="flex flex-wrap gap-4">
               <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="layout" value="3" v-model="layout" checked class="cursor-pointer"> 纵向
+                <input type="radio" name="layout" value=3 v-model="layout" checked class="cursor-pointer"> 纵向
               </label>
               <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="layout" value="4" v-model="layout" class="cursor-pointer"> 横向
+                <input type="radio" name="layout" value=4 v-model="layout" class="cursor-pointer"> 横向
               </label>
             </div>
           </div>
@@ -212,7 +212,7 @@
           </div>
 
           <!-- 纸张大小 -->
-          <div class="mb-2">
+          <!-- <div class="mb-2">
             <label class="block mb-2 font-medium text-sm text-gray-700">纸张大小</label>
             <select v-model="paperSize"
               class="w-full px-2 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
@@ -221,7 +221,7 @@
               <option value="B5">B5</option>
               <option value="Letter">Letter</option>
             </select>
-          </div>
+          </div> -->
         </div>
       </section>
 
@@ -378,7 +378,7 @@
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ElMessageBox } from 'element-plus/es/components/message-box/index.mjs';
-import { get_setting, print, upload } from '@/api/api';
+import { get_setting, print, upload, set_setting } from '@/api/api';
 import { useUserStore } from '@/stores/user';
 
 const { hasRole, hasAnyRole } = useUserStore()
@@ -401,6 +401,7 @@ const ElConfirm = ElMessageBox;
 // ========== 响应式变量 ==========
 // 打印机信息
 const printer = ref('默认打印机');
+const isauto = ref(false);
 
 // 文件相关状态
 const fileInput = ref(null);
@@ -433,12 +434,12 @@ const textFontSize = ref('md');
 
 // 打印设置
 const count = ref(1);
-const layout = ref('portrait');
+const layout = ref(3);
 const pageMode = ref('all');
 const customPages = ref('');
 const isCustomPagesValid = ref(true);
 const color = ref('color');
-const paperSize = ref('A4');
+// const paperSize = ref('A4');
 
 // 定时器标识
 let printerCheckTimer = null;
@@ -533,8 +534,9 @@ onUnmounted(() => {
 const fetchPrinterConfig = async () => {
   try {
     const res = await get_setting();
-    if (res.code === 200 && res.data?.printer) {
+    if (res.code === 200) {
       printer.value = res.data.printer;
+      isauto.value = res.data.enabled_auto_print;
     }
   } catch (error) {
     console.error('获取打印机配置失败:', error);
@@ -1076,6 +1078,7 @@ const uploadFile = async (index) => {
         };
       }
       ElMessage.success(`文件 "${file.name}" 上传成功！`);
+      await upSet();
     } else {
       throw new Error(res.message || '上传失败');
     }
@@ -1084,6 +1087,35 @@ const uploadFile = async (index) => {
     uploadedFiles.value[index] = { ...file, uploading: false };
     ElMessage.error(`文件上传失败: ${error.message}`);
     console.error('上传失败:', error);
+  }
+};
+
+/**
+ * 更新打印设置
+ * @param {}
+ */
+const upSet = async () => {
+  // 构建打印参数
+  const data = {
+    "orientation": layout.value,
+    "isauto": isauto.value,
+    "page_size": pageMode.value === 'custom' ? customPages.value : '',
+    "printer": printer.value
+  };
+
+  console.log("更新设置:", data);
+  try {
+    const res = await set_setting(data);
+    console.log("【用户】更新设置:", res.data, res);
+    if (res.success && res.code == 200) {
+      ElMessage.success('打印设置更新成功！');
+    } else {
+      ElMessage.error('更新失败：' + (res.message || '服务端异常'));
+    }
+  } catch (err) {
+    console.error('请求打印队列出错：', err);
+    ElMessage.error('网络异常，请检查后端服务是否正常');
+  } finally {
   }
 };
 
