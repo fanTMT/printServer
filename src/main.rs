@@ -12,7 +12,7 @@ async fn main() -> anyhow::Result<()> {
     // 初始化数据库
     let pool = db::create_pool(&config).await;
     info!("启动 Sqlite 数据库...");
-    // 启动服务
+    // 启动服务.
     run(pool, config).await?;
     Ok(())
 }

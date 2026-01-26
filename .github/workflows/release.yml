@@ -42,7 +42,7 @@ on:
   pull_request:
   push:
     tags:
-      - '**[0-9]+.[0-9]+.[0-9]+*'
+      - "**[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
   # Run 'dist plan' (or host) to determine what tasks we need to do
@@ -60,6 +60,18 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # 选择你前端项目需要的 Node 版本（如 18/20）
+          cache: "npm" # 缓存 npm 依赖，加速构建
+          cache-dependency-path: ui/package-lock.json # 前端依赖锁文件路径
+      # ========== 新增：安装前端依赖并构建 ==========
+      - name: Install frontend dependencies and build
+        working-directory: ./ui # 进入前端项目目录（ui）
+        run: |
+          npm install # 安装 package.json 中的依赖（包括 vite）
+          npm run build # 提前构建前端（也可以让 Rust 构建脚本调用，二选一）
       - name: Install dist
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
