@@ -4,7 +4,10 @@ version = "0.2.0"
 edition = "2024"
 build = "build.rs"
 license = "GPL3"
-readme = "readme.md"
+readme = "README.md"
+repository = "https://github.com/fanTMT/printServer"
+authors = ["番茄是水果 <li0shang@163.com>"]
+description = "Rust+Axum开发的打印中转服务"
 
 [package.metadata.deb]
 name = "web-rust-print"
@@ -25,6 +28,12 @@ assets = [
         "644",
     ],
 ]
+
+[package.metadata.wix]
+upgrade-guid = "E304891E-0D15-4D6F-99F2-6BD10F033319"
+path-guid = "1290E817-F533-4DFB-BC1F-AC38E369B804"
+license = false
+eula = false
 
 [dependencies]
 anyhow = "1.0"
@@ -61,3 +70,8 @@ tracing-appender = "0.2.4"
 [features]
 default = []
 release = ["openssl-sys"]
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
