@@ -11,8 +11,6 @@ description = "Rust+Axum开发的打印中转服务"
 
 [package.metadata.deb]
 name = "web-rust-print"
-maintainer = "番茄是水果 <li0shang@163.com>"
-extended-description = "Rust+Axum开发的打印中转服务"
 license-file = ["LICENSE", "644"]
 depends = "$auto"
 maintainer-scripts = "debian/"
@@ -28,12 +26,6 @@ assets = [
         "644",
     ],
 ]
-
-[package.metadata.wix]
-upgrade-guid = "E304891E-0D15-4D6F-99F2-6BD10F033319"
-path-guid = "1290E817-F533-4DFB-BC1F-AC38E369B804"
-license = false
-eula = false
 
 [dependencies]
 anyhow = "1.0"
@@ -54,11 +46,11 @@ tracing = "0.1.43"
 toml = "0.9.8"
 dirs = "6.0.0"
 time = { version = "0.3.44", features = ["local-offset", "serde", "formatting"] }
-reqwest = { version = "0.12.24", features = ["json", "blocking"] }
+reqwest = { version = "0.13", features = ["json", "blocking"] }
 if-addrs = "0.14.0"
 image = "0.25.9"
 jsonwebtoken = { version = "10.2.0", features = ["aws_lc_rs", "rsa"] }
-bcrypt = "0.17.1"
+bcrypt = "0.18"
 base64 = "0.22.1"
 cookie = "0.18.1"
 uuid = { version = "1.19.0", features = ["v4"] }
@@ -70,8 +62,3 @@ tracing-appender = "0.2.4"
 [features]
 default = []
 release = ["openssl-sys"]
-
-# The profile that 'dist' will build with
-[profile.dist]
-inherits = "release"
-lto = "thin"

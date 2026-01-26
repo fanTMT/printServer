@@ -26,7 +26,7 @@ impl JwtConfig {
     pub fn new(secret: String) -> Self {
         Self {
             secret,
-            expiration_hours: 24,
+            expiration_hours: 24, // 密钥一天
         }
     }
     /// 生成

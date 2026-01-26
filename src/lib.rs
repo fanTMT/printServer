@@ -4,6 +4,7 @@ pub mod error;
 pub mod hander;
 pub mod jwt;
 pub mod logger;
+pub mod printqueue;
 pub mod router;
 pub mod utils;
 
