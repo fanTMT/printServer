@@ -1,11 +1,5 @@
 <template>
   <div class="max-w-[1000px] mx-auto font-['微软雅黑',_sans-serif]">
-    <!-- 顶部标题栏保持不变 -->
-    <header class="bg-blue-500 text-white text-center py-4 px-3">
-      <h1 class="text-2xl font-normal m-0">本地扫码打印系统</h1>
-      <p class="text-sm m-1 mt-2">扫描二维码，轻松提交打印任务</p>
-    </header>
-
     <main class="p-5 md:p-6 gap-8 flex flex-col md:flex-row">
       <!-- 左侧：扫描打印区域 -->
       <section class="flex-1">
@@ -340,18 +334,30 @@ const getStatusText = (status) => {
 <!-- 全局按钮样式（可放在入口文件或组件内） -->
 <style>
 .btn {
-  @apply px-4 py-2 rounded-md border-0 text-sm cursor-pointer;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0.375rem;
+  border: 0;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: inline-block;
+  line-height: 1;
 }
 
 .btn-blue {
-  @apply bg-blue-500 text-white;
+  background-color: #3b82f6;
+  color: #ffffff;
 }
 
 .btn-red {
-  @apply bg-red-500 text-white;
+  background-color: #ef4444;
+  color: #ffffff;
 }
 
 .btn-green {
-  @apply bg-sky-300 text-black;
+  background-color: #7dd3fc;
+  color: #000000;
 }
 </style>

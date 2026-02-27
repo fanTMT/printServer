@@ -1,25 +1,5 @@
 <template>
     <div class="font-inter bg-neutral-100 min-h-screen text-neutral-800">
-        <!-- 顶部导航栏 -->
-        <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
-            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <i class="fa fa-print text-primary text-2xl"></i>
-                    <h1 class="text-xl font-bold text-neutral-800">打印助手</h1>
-                </div>
-                <nav>
-                    <ul class="flex space-x-6">
-                        <router-link to="/dashboard" exact-active-class="active"
-                            class="text-neutral-600 hover:text-primary transition-colors">首页</router-link>
-                        <li><a href="#"
-                                class="active text-primary font-medium hover:text-primary/80 transition-colors">历史记录</a>
-                        </li>
-                        <li><a href="#" class="text-neutral-600 hover:text-primary transition-colors">帮助中心</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </header>
-
         <!-- 主内容区 -->
         <main class="container mx-auto px-4 py-8">
             <h2 class="text-2xl font-bold mb-6">打印历史记录</h2>

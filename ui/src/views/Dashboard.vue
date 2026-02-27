@@ -1,41 +1,10 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-['Microsoft_YaHei',_sans-serif]">
-    <!-- 顶部导航 -->
-    <header
-      class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 border-b border-gray-200 mb-6 sm:mb-8 gap-4">
-      <h1 class="text-xl sm:text-2xl font-medium flex items-center gap-2">
-        <span>打印助手</span>
-        <span class="text-sm sm:text-base text-gray-600 font-normal">
-          打印机: <span class="font-medium">{{ printer }}</span>
-        </span>
-      </h1>
-      <nav class="w-full sm:w-auto">
-        <ul class="flex flex-wrap justify-center sm:justify-end gap-4 sm:gap-6">
-          <li>
-            <a href="#" class="active text-primary font-medium hover:text-primary/80 transition-colors px-1 py-2">首页</a>
-          </li>
-          <router-link to="/history" exact-active-class="active text-primary font-medium"
-            class="text-neutral-600 hover:text-primary transition-colors px-1 py-2">
-            历史记录
-          </router-link>
-          <router-link v-if="hasRole('admin')" to="/admin" exact-active-class="active text-primary font-medium"
-            class="text-neutral-600 hover:text-primary transition-colors px-1 py-2">
-            管理员设置
-          </router-link>
-          <router-link v-if="hasRole('user')" to="/abrod" exact-active-class="active text-primary font-medium"
-            class="text-neutral-600 hover:text-primary transition-colors px-1 py-2">
-            用户设置
-          </router-link>
-        </ul>
-      </nav>
-    </header>
-
     <!-- 主内容区 -->
     <main class="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-10">
       <!-- 上传&设置区域 -->
       <section class="w-full lg:w-1/3 min-w-[300px]">
         <h2 class="text-lg sm:text-xl font-medium mb-4">上传打印文件</h2>
-
         <!-- 文件上传区域 -->
         <div
           class="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center cursor-pointer mb-5 transition-all duration-200 hover:border-blue-500 hover:bg-gray-50"
