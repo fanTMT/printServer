@@ -141,9 +141,13 @@
                                 <td class="py-3 px-4">{{ formatDate(item.created_at) }}</td>
                                 <td class="py-3 px-4">
                                     <div class="flex space-x-2">
-                                        <button @click="viewDetail(item)" :disabled="!item.file_path"
-                                            class="text-blue-600 hover:text-blue-800 transition-colors text-sm">
-                                            <i class="fa fa-eye mr-1"></i>查看
+                                        <button @click="previewFile(item)" :disabled="!item.file_path"
+                                            class="text-blue-600 hover:text-blue-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i class="fa fa-eye mr-1"></i>预览
+                                        </button>
+                                        <button @click="printAgain(item)" :disabled="!item.file_path"
+                                            class="text-green-600 hover:text-green-800 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i class="fa fa-print mr-1"></i>重新打印
                                         </button>
                                         <button @click="deleteRecord(item.id)"
                                             class="text-red-600 hover:text-red-800 transition-colors text-sm">
@@ -231,6 +235,137 @@
             </div>
         </main>
 
+        <!-- 预览和打印侧边栏 -->
+        <div class="fixed right-0 top-0 h-screen w-96 bg-white shadow-lg transform transition-transform duration-300 z-40"
+            :class="{ 'translate-x-full': !showPreviewPanel, 'translate-x-0': showPreviewPanel }">
+            <div class="h-full flex flex-col">
+                <!-- 头部 -->
+                <div class="flex justify-between items-center p-6 border-b border-neutral-200">
+                    <h3 class="text-lg font-semibold">文件预览</h3>
+                    <button @click="closePreviewPanel" class="text-neutral-400 hover:text-neutral-600">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- 内容 -->
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div v-if="!selectedFile" class="text-center text-neutral-500 py-12">
+                        <i class="fa fa-file text-5xl text-neutral-300 mb-4 block"></i>
+                        <p>选择文件进行预览</p>
+                    </div>
+
+                    <!-- 文件信息 -->
+                    <div v-else class="space-y-4">
+                        <div>
+                            <p class="text-sm text-neutral-600 mb-1">文件名</p>
+                            <p class="font-medium truncate">{{ selectedFile.original_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-neutral-600 mb-1">文件大小</p>
+                            <p class="font-medium">{{ selectedFile.file_size }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-neutral-600 mb-1">打印机</p>
+                            <p class="font-medium">{{ selectedFile.printer }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-neutral-600 mb-1">状态</p>
+                            <p :class="[
+                                'font-medium px-2 py-1 rounded text-sm inline-block',
+                                selectedFile.status === '打印完成' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            ]">
+                                {{ selectedFile.status }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-neutral-600 mb-1">打印时间</p>
+                            <p class="font-medium">{{ formatDate(selectedFile.created_at) }}</p>
+                        </div>
+
+                        <!-- 打印设置 -->
+                        <div class="border-t border-neutral-200 pt-4 mt-4">
+                            <h4 class="font-semibold mb-3">打印设置</h4>
+                            
+                            <!-- 份数 -->
+                            <div class="mb-4">
+                                <label class="block text-sm text-neutral-600 mb-2">打印份数</label>
+                                <div class="flex items-center gap-2">
+                                    <button
+                                        class="w-8 h-8 border border-neutral-300 bg-white rounded text-sm cursor-pointer hover:bg-neutral-50 transition-colors"
+                                        @click="printCount > 1 && (printCount--)" :disabled="printCount <= 1"
+                                        :class="{ 'opacity-50 cursor-not-allowed': printCount <= 1 }">
+                                        -
+                                    </button>
+                                    <span class="min-w-[2rem] text-center">{{ printCount }}</span>
+                                    <button
+                                        class="w-8 h-8 border border-neutral-300 bg-white rounded text-sm cursor-pointer hover:bg-neutral-50 transition-colors"
+                                        @click="printCount < 99 && (printCount++)" :disabled="printCount >= 99"
+                                        :class="{ 'opacity-50 cursor-not-allowed': printCount >= 99 }">
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- 打印页码 -->
+                            <div class="mb-4">
+                                <label class="block text-sm text-neutral-600 mb-2">打印页码</label>
+                                <input type="text" v-model="printPages" placeholder="留空表示打印全部，例如：1,2 或 1-3"
+                                    class="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                                <p class="text-xs text-neutral-500 mt-1">输入页码范围，留空视为全部</p>
+                            </div>
+                            <!-- 布局 -->
+                            <div class="mb-4">
+                                <label class="block text-sm text-neutral-600 mb-2">页面布局</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                        <input type="radio" name="layout" value="3" v-model="printLayout" class="cursor-pointer">
+                                        纵向
+                                    </label>
+                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                        <input type="radio" name="layout" value="4" v-model="printLayout" class="cursor-pointer">
+                                        横向
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 颜色 -->
+                            <div class="mb-4">
+                                <label class="block text-sm text-neutral-600 mb-2">打印颜色</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                        <input type="radio" name="color" value="color" v-model="printColor" class="cursor-pointer">
+                                        彩色
+                                    </label>
+                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                        <input type="radio" name="color" value="black" v-model="printColor" class="cursor-pointer">
+                                        黑白
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部按钮 -->
+                <div class="p-6 border-t border-neutral-200 space-y-3">
+                    <button v-if="selectedFile" @click="executePrint"
+                        class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition-colors font-medium">
+                        <i class="fa fa-print mr-2"></i> 打印
+                    </button>
+                    <button v-if="selectedFile" @click="downloadFile"
+                        class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors font-medium">
+                        <i class="fa fa-download mr-2"></i> 下载
+                    </button>
+                    <button @click="closePreviewPanel"
+                        class="w-full px-4 py-2 border border-neutral-300 rounded-lg text-sm hover:bg-neutral-50 transition-colors">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 预览面板背景遮罩 -->
+        <div v-if="showPreviewPanel" class="fixed inset-0 bg-black bg-opacity-30 z-30" @click="closePreviewPanel"></div>
+
         <!-- 页脚 -->
         <footer class="bg-white border-t border-neutral-200 mt-12 py-6">
             <div class="container mx-auto px-4">
@@ -287,7 +422,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { get_all } from '@/api/api';
+import { get_all, print } from '@/api/api';
 import { formatDate, parseArrayDate } from '@/utils/formatDate';
 
 // 响应式数据
@@ -306,6 +441,14 @@ const notificationTitle = ref('');
 const notificationMessage = ref('');
 const notificationType = ref('success');
 const errorMsg = ref(''); // 新增：接口错误提示
+
+// 预览和打印相关
+const showPreviewPanel = ref(false);
+const selectedFile = ref(null);
+const printCount = ref(1);
+const printLayout = ref('3');
+const printColor = ref('color');
+const printPages = ref('');
 
 // 筛选条件（适配新状态值）
 const filterStatus = ref('all');
@@ -459,7 +602,111 @@ const viewDetail = (item) => {
     triggerNotification('查看详情', `正在查看 ${item.original_name} 的详情`, 'success');
 };
 
-// 方法 - 删除单条记录
+// 方法 - 预览文件
+const previewFile = (item) => {
+    if (!item.file_path) {
+        triggerNotification('无法预览', '该文件不可用或已删除', 'error');
+        return;
+    }
+    selectedFile.value = item;
+    showPreviewPanel.value = true;
+    printCount.value = 1;
+    printLayout.value = '3';
+    printColor.value = 'color';
+    printPages.value = '';
+};
+
+// 方法 - 关闭预览面板
+const closePreviewPanel = () => {
+    showPreviewPanel.value = false;
+    selectedFile.value = null;
+};
+
+// 方法 - 重新打印
+const printAgain = (item) => {
+    if (!item.file_path) {
+        triggerNotification('无法打印', '该文件不可用或已删除', 'error');
+        return;
+    }
+    selectedFile.value = item;
+    showPreviewPanel.value = true;
+    printCount.value = 1;
+    printLayout.value = '3';
+    printColor.value = 'color';
+    printPages.value = '';
+};
+
+// 方法 - 执行打印
+const executePrint = async () => {
+    if (!selectedFile.value) return;
+    
+    try {
+        // 构建后端 PrintValue 结构体对应的参数
+        const printParams = {
+            fileName: selectedFile.value.original_name,
+            printer: selectedFile.value.printer || '',
+            paperSize: selectedFile.value.paper_size || 'A4',
+            layout: printLayout.value,
+            customPages: printPages.value.trim() === '' ? '' : printPages.value.trim()
+        };
+
+        console.log('发送打印请求:', printParams);
+        triggerNotification('打印中', `正在打印文件: ${selectedFile.value.original_name}`, 'success');
+        
+        // 调用后端打印接口
+        try {
+            const res = await print(printParams);
+            console.log('打印接口返回', res);
+            if (res && res.status === 200) {
+                // 同时更新 historyData 和 selectedFile，确保数据一致性
+                if (selectedFile.value) {
+                    const idx = historyData.value.findIndex(i => i.id === selectedFile.value.id);
+                    if (idx !== -1) {
+                        historyData.value[idx].status = '打印完成';
+                    }
+                    // 关键：同时更新当前 selectedFile.value 的状态，预览面板会立即变绿
+                    selectedFile.value.status = '打印完成';
+                }
+                updateStatistics();
+                triggerNotification('打印完成', '历史记录已更新', 'success');
+                // 异步刷新列表以防后端有其它变动
+                fetchPrintQueue();
+            }
+        } catch (err) {
+            console.error('调用打印接口失败', err);
+            triggerNotification('打印失败', '请求打印接口出错', 'error');
+        }
+        
+        closePreviewPanel();
+    } catch (error) {
+        triggerNotification('打印失败', `${error.message}`, 'error');
+        console.error('打印失败:', error);
+    }
+};
+
+// 方法 - 下载文件
+const downloadFile = () => {
+    if (!selectedFile.value || !selectedFile.value.file_path) {
+        triggerNotification('无法下载', '该文件不可用或已删除', 'error');
+        return;
+    }
+    
+    try {
+        // 创建一个临时的a标签进行下载
+        const link = document.createElement('a');
+        link.href = selectedFile.value.file_path;
+        link.download = selectedFile.value.original_name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        triggerNotification('下载中', `正在下载: ${selectedFile.value.original_name}`, 'success');
+    } catch (error) {
+        triggerNotification('下载失败', `${error.message}`, 'error');
+        console.error('下载失败:', error);
+    }
+};
+
 const deleteRecord = (id) => {
     historyData.value = historyData.value.filter(item => item.id !== id);
     updateStatistics();

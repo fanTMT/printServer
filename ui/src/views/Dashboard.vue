@@ -1,9 +1,9 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-['Microsoft_YaHei',_sans-serif]">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 font-['Microsoft_YaHei',_sans-serif]">
     <!-- 主内容区 -->
-    <main class="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-10">
-      <!-- 上传&设置区域 -->
-      <section class="w-full lg:w-1/3 min-w-[300px]">
+    <main class="flex flex-col gap-6 sm:gap-8 lg:gap-10">
+      <!-- 上传区域 -->
+      <section class="w-full">
         <h2 class="text-lg sm:text-xl font-medium mb-4">上传打印文件</h2>
         <!-- 文件上传区域 -->
         <div
@@ -21,18 +21,17 @@
         </div>
 
         <!-- 上传文件列表 -->
-        <div class="border border-gray-200 rounded-lg p-4 sm:p-5 bg-white mb-5 shadow-sm">
+        <div class="border border-gray-200 rounded-lg p-4 sm:p-5 bg-white shadow-sm">
           <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
-            <h3 class="text-base sm:text-lg font-medium text-gray-800">已上传文件</h3>
+            <h3 class="text-base sm:text-lg font-medium text-gray-800">待上传文件</h3>
             <span class="text-xs text-gray-500">{{ uploadedFiles.length }} 个文件</span>
           </div>
 
           <!-- 文件列表容器 -->
-          <div class="max-h-[220px] overflow-y-auto mb-3 pr-1" v-if="uploadedFiles.length > 0">
+          <div class="max-h-[400px] overflow-y-auto mb-3 pr-1" v-if="uploadedFiles.length > 0">
             <div
-              class="flex flex-col sm:flex-row items-start sm:items-center p-3 border border-gray-100 rounded-md mb-2 hover:bg-gray-50 transition-colors cursor-pointer"
-              :class="{ 'bg-blue-50 border-blue-500': activeFileIndex === index }"
-              v-for="(file, index) in uploadedFiles" :key="index" @click="switchActiveFile(index)">
+              class="flex flex-col sm:flex-row items-start sm:items-center p-3 border border-gray-100 rounded-md mb-2 hover:bg-gray-50 transition-colors"
+              v-for="(file, index) in uploadedFiles" :key="index">
 
               <!-- 文件类型图标 -->
               <div class="text-xl w-6 text-center mr-3 mb-2 sm:mb-0">
@@ -58,35 +57,15 @@
 
               <!-- 操作按钮 -->
               <div class="flex flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                <button class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:opacity-90 transition-opacity"
-                  @click.stop="previewFile(index)" title="预览文件">
-                  预览
-                </button>
                 <button class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:opacity-90 transition-opacity"
-                  @click.stop="removeFile(index)" title="删除文件">
+                  @click="removeFile(index)" title="删除文件">
                   删除
                 </button>
                 <button class="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:opacity-90 transition-opacity"
-                  @click.stop="uploadFile(index)" :disabled="file.uploading || file.uploaded"
+                  @click="uploadFile(index)" :disabled="file.uploading || file.uploaded"
                   :class="{ 'opacity-60 cursor-not-allowed': file.uploading || file.uploaded }" title="上传文件到服务器">
                   <i v-if="file.uploading" class="fa fa-spinner fa-spin mr-1"></i>
                   {{ file.uploading ? '上传中' : (file.uploaded ? '已上传' : '上传') }}
-                </button>
-
-                <!-- 打印按钮 -->
-                <button class="px-2 py-1 bg-green-600 text-white rounded-md text-sm hover:opacity-90 transition-opacity"
-                  @click.stop="printFile(index)" :disabled="!file.uploaded || file.uploading || file.printed" :class="{
-                    'opacity-60 cursor-not-allowed': !file.uploaded || file.uploading || file.printed,
-                    'bg-gray-400': file.printed  // 打印后变为灰色
-                  }" title="发送到打印机">
-                  <!-- 根据状态显示不同内容 -->
-                  <template v-if="file.printing">
-                    <i class="fa fa-spinner fa-spin mr-1"></i>
-                    打印中
-                  </template>
-                  <template v-else>
-                    {{ file.printed ? '已打印' : '打印' }}
-                  </template>
                 </button>
               </div>
             </div>
@@ -95,7 +74,7 @@
           <!-- 空文件状态 -->
           <div class="text-center text-gray-600 p-4 text-sm" v-else>
             <div class="text-4xl mb-2 text-gray-300">📁</div>
-            <p>暂无上传文件</p>
+            <p>暂无待上传文件</p>
           </div>
 
           <!-- 列表操作按钮 -->
@@ -104,238 +83,11 @@
               @click="clearAllFiles">
               清空列表
             </button>
-            <button class="px-3 py-1.5 text-xs bg-green-500 text-white rounded hover:opacity-90 transition-opacity"
-              @click="printAllFiles" :disabled="!uploadedFiles.some(file => file.uploaded)"
-              :class="{ 'opacity-60 cursor-not-allowed': !uploadedFiles.some(file => file.uploaded) }">
-              打印全部已上传
+            <button class="px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:opacity-90 transition-opacity"
+              @click="uploadAllFiles" :disabled="!uploadedFiles.some(file => !file.uploading && !file.uploaded)"
+              :class="{ 'opacity-60 cursor-not-allowed': !uploadedFiles.some(file => !file.uploading && !file.uploaded) }">
+              全部上传
             </button>
-          </div>
-        </div>
-
-        <!-- 打印设置 -->
-        <div class="border border-gray-200 rounded-lg p-4 sm:p-5 bg-white shadow-sm">
-          <h3 class="text-base sm:text-lg font-medium mb-4 text-gray-800">打印设置</h3>
-
-          <!-- 份数 -->
-          <div class="mb-4">
-            <label class="block mb-2 font-medium text-sm text-gray-700">打印份数</label>
-            <div class="flex items-center gap-2">
-              <button
-                class="w-7 h-7 border border-gray-200 bg-white rounded text-base cursor-pointer hover:bg-gray-50 transition-colors"
-                @click="count > 1 && (count--)" :disabled="count <= 1"
-                :class="{ 'opacity-50 cursor-not-allowed': count <= 1 }">
-                -
-              </button>
-              <span class="min-w-[2rem] text-center">{{ count }}</span>
-              <button
-                class="w-7 h-7 border border-gray-200 bg-white rounded text-base cursor-pointer hover:bg-gray-50 transition-colors"
-                @click="count < 99 && (count++)" :disabled="count >= 99"
-                :class="{ 'opacity-50 cursor-not-allowed': count >= 99 }">
-                +
-              </button>
-              <span class="text-xs text-gray-500 ml-2">最多99份</span>
-            </div>
-          </div>
-
-          <!-- 布局 -->
-          <div class="mb-4">
-            <label class="block mb-2 font-medium text-sm text-gray-700">页面布局</label>
-            <div class="flex flex-wrap gap-4">
-              <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="layout" value=3 v-model="layout" checked class="cursor-pointer"> 纵向
-              </label>
-              <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="layout" value=4 v-model="layout" class="cursor-pointer"> 横向
-              </label>
-            </div>
-          </div>
-
-          <!-- 页面 -->
-          <div class="mb-4">
-            <label class="block mb-2 font-medium text-sm text-gray-700">打印页面</label>
-            <div class="flex flex-wrap gap-4 mb-2">
-              <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="page" value="all" v-model="pageMode" checked class="cursor-pointer"> 全部
-              </label>
-              <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="page" value="custom" v-model="pageMode" class="cursor-pointer"> 自定义
-              </label>
-            </div>
-            <input type="text" placeholder="例如:1-5,8,11-13" v-if="pageMode === 'custom'" v-model="customPages"
-              class="w-full px-2 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              @input="validateCustomPages">
-            <p v-if="pageMode === 'custom' && !isCustomPagesValid" class="text-xs text-red-500 mt-1">格式错误，请输入正确的页码范围</p>
-          </div>
-
-          <!-- 颜色 -->
-          <div class="mb-4">
-            <label class="block mb-2 font-medium text-sm text-gray-700">打印颜色</label>
-            <div class="flex flex-wrap gap-4">
-              <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="color" value="color" v-model="color" checked class="cursor-pointer"> 彩色
-              </label>
-              <label class="flex items-center gap-1 text-sm cursor-pointer">
-                <input type="radio" name="color" value="black" v-model="color" class="cursor-pointer"> 黑白
-              </label>
-            </div>
-          </div>
-
-          <!-- 纸张大小 -->
-          <!-- <div class="mb-2">
-            <label class="block mb-2 font-medium text-sm text-gray-700">纸张大小</label>
-            <select v-model="paperSize"
-              class="w-full px-2 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-              <option value="A4">A4(默认)</option>
-              <option value="A3">A3</option>
-              <option value="B5">B5</option>
-              <option value="Letter">Letter</option>
-            </select>
-          </div> -->
-        </div>
-      </section>
-
-      <!-- 文件预览区域 -->
-      <section class="w-full lg:w-2/3">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg sm:text-xl font-medium flex items-center gap-2">
-            <span>文件预览</span>
-            <span v-if="selectedFile" class="text-sm font-normal text-gray-600">({{ selectedFile.name }})</span>
-          </h2>
-          <button v-if="selectedFile"
-            class="text-sm text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1"
-            @click="downloadSelectedFile">
-            <i class="fa fa-download"></i> 下载原文件
-          </button>
-        </div>
-
-        <!-- 通用预览控制 -->
-        <div class="flex flex-wrap items-center gap-3 mb-4 p-3 bg-gray-50 rounded-md border border-gray-100"
-          v-if="selectedFile">
-          <!-- PDF 专属控制 -->
-          <div class="flex flex-wrap items-center gap-3 w-full" v-if="fileType === 'pdf'">
-            <button class="px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:opacity-90 transition-opacity"
-              @click="prevPage" :disabled="currentPage <= 1"
-              :class="{ 'opacity-50 cursor-not-allowed': currentPage <= 1 }">
-              上一页
-            </button>
-            <span class="text-sm whitespace-nowrap">第 {{ currentPage }} / {{ totalPages }} 页</span>
-            <button class="px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:opacity-90 transition-opacity"
-              @click="nextPage" :disabled="currentPage >= totalPages"
-              :class="{ 'opacity-50 cursor-not-allowed': currentPage >= totalPages }">
-              下一页
-            </button>
-            <select v-model="pdfScale" @change="renderPdfPage"
-              class="px-2 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-              <option value="0.75">75%</option>
-              <option value="1">100%</option>
-              <option value="1.25">125%</option>
-              <option value="1.5">150%</option>
-              <option value="2">200%</option>
-              <option value="auto">自适应宽度</option>
-            </select>
-            <button class="px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:opacity-90 transition-opacity"
-              @click="rotatePdf">
-              旋转 ↺
-            </button>
-          </div>
-
-          <!-- 图片专属控制 -->
-          <div class="flex flex-wrap items-center gap-3 w-full" v-else-if="fileType === 'image'">
-            <button class="px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:opacity-90 transition-opacity"
-              @click="zoomOut" :disabled="scale <= 0.5" :class="{ 'opacity-50 cursor-not-allowed': scale <= 0.5 }">
-              - 缩小
-            </button>
-            <span class="text-sm whitespace-nowrap">{{ Math.round(scale * 100) }}%</span>
-            <button class="px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:opacity-90 transition-opacity"
-              @click="zoomIn" :disabled="scale >= 2" :class="{ 'opacity-50 cursor-not-allowed': scale >= 2 }">
-              放大 +
-            </button>
-            <button class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300 transition-colors"
-              @click="resetScale">
-              重置
-            </button>
-            <button class="px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:opacity-90 transition-opacity"
-              @click="rotateImage">
-              旋转 ↺
-            </button>
-          </div>
-
-          <!-- 文本专属控制 -->
-          <div class="flex flex-wrap items-center gap-3 w-full" v-else-if="fileType === 'text'">
-            <select v-model="textFontSize" @change="updateTextPreview"
-              class="px-2 py-1.5 border border-gray-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-              <option value="sm">小字体</option>
-              <option value="md" selected>中字体</option>
-              <option value="lg">大字体</option>
-            </select>
-            <button class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300 transition-colors"
-              @click="copyTextContent">
-              <i class="fa fa-copy mr-1"></i> 复制文本
-            </button>
-          </div>
-        </div>
-
-        <!-- 文件预览容器 -->
-        <div
-          class="border border-gray-200 rounded-lg min-h-[500px] sm:min-h-[600px] flex items-center justify-center p-5 bg-white overflow-auto shadow-sm">
-          <!-- 空状态 -->
-          <div class="text-center text-gray-600 p-5" v-if="!selectedFile">
-            <div class="text-8xl mb-4 text-gray-300">📄</div>
-            <p class="text-base">上传文件后可在此处预览</p>
-            <p class="text-sm text-gray-500 mt-1">支持 PDF、图片、文本文件预览</p>
-          </div>
-
-          <!-- 加载状态 -->
-          <div class="text-center text-gray-600 p-5" v-if="selectedFile && isPreviewLoading.value">
-            <div class="text-5xl mb-4 text-gray-300">
-              <i class="fa fa-spinner fa-spin"></i>
-            </div>
-            <p class="text-base">正在加载预览...</p>
-          </div>
-
-          <!-- 预览错误状态 -->
-          <div class="text-center text-red-500 p-5" v-if="selectedFile && previewError.value">
-            <div class="text-5xl mb-4">❌</div>
-            <p class="text-base mb-2">{{ previewError.value }}</p>
-            <p class="text-sm text-gray-500">请检查文件是否损坏或格式不支持</p>
-          </div>
-
-          <!-- PDF 预览（使用 pdf.js） -->
-          <div class="w-full min-h-[500px] sm:min-h-[600px] flex items-center justify-center relative"
-            v-else-if="fileType === 'pdf' && selectedFile && !isPreviewLoading.value && !previewError.value">
-            <canvas ref="pdfCanvas" class="max-w-full shadow-sm rounded"></canvas>
-          </div>
-
-          <!-- 图片预览 -->
-          <div class="w-full min-h-[500px] sm:min-h-[600px] flex items-center justify-center overflow-auto"
-            v-else-if="fileType === 'image' && selectedFile && !isPreviewLoading.value && !previewError.value">
-            <img :src="previewUrl"
-              class="max-w-full max-h-[600px] shadow-sm rounded transition-transform duration-200 origin-center"
-              :style="{ transform: `scale(${scale}) rotate(${rotateDeg}deg)` }" alt="图片预览"
-              @load="isPreviewLoading.value = false" @error="handlePreviewError('图片加载失败')">
-          </div>
-
-          <!-- 文本预览 -->
-          <div class="w-full min-h-[500px] sm:min-h-[600px] overflow-auto p-4 bg-gray-50 rounded"
-            v-else-if="fileType === 'text' && selectedFile && !isPreviewLoading.value && !previewError.value">
-            <pre
-              class="whitespace-pre-wrap break-words font-['Consolas',_'Microsoft_YaHei',_monospace] leading-relaxed text-gray-800 m-0"
-              :class="{
-                'text-xs': textFontSize === 'sm',
-                'text-sm': textFontSize === 'md',
-                'text-base': textFontSize === 'lg'
-              }">
-        {{ textContent || '无文本内容' }}
-      </pre>
-          </div>
-
-          <!-- 不支持预览的文件 -->
-          <div class="text-center text-gray-600 p-5"
-            v-else-if="selectedFile && !isPreviewLoading.value && !previewError.value">
-            <div class="text-8xl mb-4 text-gray-300">📁</div>
-            <p class="text-base mb-2">该文件格式暂不支持预览</p>
-            <p class="text-sm text-gray-500">文件名称: {{ selectedFile.name }}</p>
-            <p class="text-sm text-gray-500 mt-2">支持预览格式: PDF、JPG、PNG、TXT</p>
           </div>
         </div>
       </section>
@@ -374,32 +126,11 @@ const isauto = ref(false);
 
 // 文件相关状态
 const fileInput = ref(null);
-const selectedFile = ref(null); // 存储的是 UploadedFile 对象
-const previewUrl = ref('');
-const fileType = ref('');
-const textContent = ref('');
 const isDragover = ref(false);
-const isPreviewLoading = ref(false);
-const previewError = ref('');
 
 // 上传文件列表
 const uploadedFiles = ref([]);
-const activeFileIndex = ref(-1);
 
-// PDF 相关
-let pdfDoc = null;
-const pdfCanvas = ref(null);
-const totalPages = ref(0);
-const currentPage = ref(1);
-const pdfScale = ref('1');
-const pdfRotation = ref(0);
-
-// 图片相关
-const scale = ref(1);
-const rotateDeg = ref(0);
-
-// 文本相关
-const textFontSize = ref('md');
 
 // 打印设置
 const count = ref(1);
@@ -442,31 +173,6 @@ const validateCustomPages = () => {
   return isCustomPagesValid.value;
 };
 
-/**
- * 处理预览错误
- * @param {string} message - 错误信息
- */
-const handlePreviewError = (message) => {
-  isPreviewLoading.value = false;
-  previewError.value = message;
-  console.error('预览错误:', message);
-};
-
-/**
- * 重置预览状态
- */
-const resetPreviewState = () => {
-  isPreviewLoading.value = false;
-  previewError.value = '';
-  previewUrl.value = '';
-  textContent.value = '';
-  pdfDoc = null;
-  totalPages.value = 0;
-  currentPage.value = 1;
-  scale.value = 1;
-  rotateDeg.value = 0;
-};
-
 // ========== 生命周期钩子 ==========
 onMounted(async () => {
   // 获取打印机配置
@@ -474,25 +180,12 @@ onMounted(async () => {
 
   // 定时检查打印机状态（15秒一次）
   printerCheckTimer = setInterval(fetchPrinterConfig, 15000);
-
-  // 初始化 PDF.js
-  await initPdfJs();
 });
 
 onUnmounted(() => {
   // 清除定时器
   if (printerCheckTimer) {
     clearInterval(printerCheckTimer);
-  }
-
-  // 清理 PDF 资源
-  if (pdfDoc) {
-    pdfDoc.destroy();
-  }
-
-  // 释放 blob URL
-  if (previewUrl.value) {
-    URL.revokeObjectURL(previewUrl.value);
   }
 });
 
@@ -513,28 +206,6 @@ const fetchPrinterConfig = async () => {
   }
 };
 
-/**
- * 初始化 PDF.js
- */
-const initPdfJs = async () => {
-  try {
-    // 确保 pdfjsLib 已加载
-    if (window.pdfjsLib) {
-      // 配置 Worker
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
-
-      console.log('PDF.js 初始化成功');
-    } else {
-      throw new Error('pdfjsLib 未加载');
-    }
-  } catch (error) {
-    console.error('PDF.js 初始化失败:', error);
-    ElMessage.error('PDF 预览功能初始化失败，可能无法预览 PDF 文件');
-  }
-};
-
-// ========== 文件上传相关 ==========
 /**
  * 打开文件选择器
  */
@@ -617,10 +288,9 @@ const addFileToList = (rawFile) => {
     uploading: false
   };
 
-  // 添加文件并选中
+  // 添加文件到列表
   uploadedFiles.value.push(fileWithState);
-  activeFileIndex.value = uploadedFiles.value.length - 1;
-  loadFilePreview(fileWithState);
+  ElMessage.success(`文件 "${rawFile.name}" 已添加到列表`);
 };
 
 /**
@@ -657,279 +327,7 @@ const handleFileDrop = (e) => {
   isDragover.value = false;
 };
 
-// ========== 文件预览相关 ==========
-/**
- * 加载文件预览
- * @param {UploadedFile} file - 包装后的文件对象
- */
-const loadFilePreview = async (file) => {
-  if (!file || !file.rawFile) { // 确保有原生 File 对象
-    handlePreviewError('无效的文件对象');
-    return;
-  }
-
-  selectedFile.value = file;
-  resetPreviewState();
-  isPreviewLoading.value = true;
-
-  try {
-    const fileMimeType = file.rawFile.type; // 使用原生 File 对象的 type
-
-    if (fileMimeType.includes('pdf')) {
-      await loadPdfPreview(file.rawFile); // 传入原生 File 对象
-    } else if (fileMimeType.includes('image')) {
-      loadImagePreview(file.rawFile); // 传入原生 File 对象
-    } else if (fileMimeType.includes('text')) {
-      await loadTextPreview(file.rawFile); // 传入原生 File 对象
-    } else {
-      fileType.value = 'other';
-      isPreviewLoading.value = false;
-    }
-  } catch (error) {
-    handlePreviewError(`预览失败: ${error.message}`);
-  }
-};
-
-/**
- * 加载 PDF 预览
- * @param {File} rawFile - 原生 PDF 文件对象
- */
-const loadPdfPreview = async (rawFile) => {
-  fileType.value = 'pdf';
-
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onerror = (e) => {
-      reject(new Error('PDF 文件读取失败'));
-    };
-
-    reader.onload = async (e) => {
-      try {
-        const typedArray = new Uint8Array(e.target.result);
-        const loadingTask = window.pdfjsLib.getDocument({
-          data: typedArray,
-          disableFetch: true,
-          disableStream: true,
-          disableRange: true,
-          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
-          cMapPacked: true
-        });
-
-        pdfDoc = await loadingTask.promise;
-        totalPages.value = pdfDoc.numPages;
-        console.log('PDF 解析成功，总页数:', totalPages.value);
-
-        await renderPdfPage();
-        isPreviewLoading.value = false;
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    // 读取原生 File 对象
-    reader.readAsArrayBuffer(rawFile);
-  });
-};
-
-/**
- * 加载图片预览
- * @param {File} rawFile - 原生图片文件对象
- */
-const loadImagePreview = (rawFile) => {
-  fileType.value = 'image';
-  // 创建 blob URL 用于预览（使用原生 File 对象）
-  previewUrl.value = URL.createObjectURL(rawFile);
-};
-
-/**
- * 加载文本预览
- * @param {File} rawFile - 原生文本文件对象
- */
-const loadTextPreview = async (rawFile) => {
-  fileType.value = 'text';
-
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onerror = (e) => {
-      reject(new Error('文本文件读取失败'));
-    };
-
-    reader.onload = (e) => {
-      textContent.value = e.target.result || '';
-      isPreviewLoading.value = false;
-      resolve();
-    };
-
-    // 尝试多种编码读取原生 File 对象
-    reader.readAsText(rawFile, 'utf-8');
-  });
-};
-
-/**
- * 渲染 PDF 页面
- */
-const renderPdfPage = async () => {
-  if (!pdfDoc || !pdfCanvas.value) return;
-
-  const page = await pdfDoc.getPage(currentPage.value);
-
-  // 计算缩放比例
-  let scaleValue;
-  if (pdfScale.value === 'auto') {
-    const containerWidth = pdfCanvas.value.parentElement.clientWidth - 40;
-    const viewport = page.getViewport({ scale: 1 });
-    scaleValue = containerWidth / viewport.width;
-  } else {
-    scaleValue = parseFloat(pdfScale.value);
-  }
-
-  // 获取旋转后的视口
-  const viewport = page.getViewport({
-    scale: scaleValue,
-    rotation: pdfRotation.value
-  });
-
-  // 设置 canvas 尺寸
-  const canvas = pdfCanvas.value;
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-
-  // 渲染页面
-  const ctx = canvas.getContext('2d');
-  await page.render({
-    canvasContext: ctx,
-    viewport: viewport
-  }).promise;
-};
-
-/**
- * PDF 页码切换 - 上一页
- */
-const prevPage = async () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-    await renderPdfPage();
-  }
-};
-
-/**
- * PDF 页码切换 - 下一页
- */
-const nextPage = async () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-    await renderPdfPage();
-  }
-};
-
-/**
- * 旋转 PDF
- */
-const rotatePdf = async () => {
-  pdfRotation.value = (pdfRotation.value + 90) % 360;
-  await renderPdfPage();
-};
-
-/**
- * 图片缩放 - 放大
- */
-const zoomIn = () => {
-  if (scale.value < 2) {
-    scale.value = parseFloat((scale.value + 0.1).toFixed(1));
-  }
-};
-
-/**
- * 图片缩放 - 缩小
- */
-const zoomOut = () => {
-  if (scale.value > 0.5) {
-    scale.value = parseFloat((scale.value - 0.1).toFixed(1));
-  }
-};
-
-/**
- * 重置图片缩放和旋转
- */
-const resetScale = () => {
-  scale.value = 1;
-  rotateDeg.value = 0;
-};
-
-/**
- * 旋转图片
- */
-const rotateImage = () => {
-  rotateDeg.value = (rotateDeg.value + 90) % 360;
-};
-
-/**
- * 更新文本预览样式
- */
-const updateTextPreview = () => {
-  // 仅更新样式，内容不变
-};
-
-/**
- * 复制文本内容
- */
-const copyTextContent = () => {
-  if (!textContent.value) {
-    ElMessage.warning('无文本内容可复制');
-    return;
-  }
-
-  navigator.clipboard.writeText(textContent.value)
-    .then(() => {
-      ElMessage.success('文本已复制到剪贴板');
-    })
-    .catch(() => {
-      ElMessage.error('复制失败，请手动复制');
-    });
-};
-
-/**
- * 下载选中的文件
- */
-const downloadSelectedFile = () => {
-  if (!selectedFile.value || !selectedFile.value.rawFile) return;
-
-  // 使用原生 File 对象创建下载链接
-  const url = URL.createObjectURL(selectedFile.value.rawFile);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = selectedFile.value.name;
-  document.body.appendChild(a);
-  a.click();
-
-  // 清理
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
-
-// ========== 文件列表操作相关 ==========
-/**
- * 切换激活文件
- * @param {number} index - 文件索引
- */
-const switchActiveFile = (index) => {
-  const file = uploadedFiles.value[index];
-  if (file) {
-    activeFileIndex.value = index;
-    loadFilePreview(file);
-  }
-};
-
-/**
- * 预览指定文件
- * @param {number} index - 文件索引
- */
-const previewFile = (index) => {
-  switchActiveFile(index);
-};
+// ========== 上传相关 ==========
 
 /**
  * 删除指定文件
@@ -946,30 +344,8 @@ const removeFile = async (index) => {
       cancelButtonText: '取消',
     });
 
-    // 释放预览资源
-    if (index === activeFileIndex.value) {
-      if (previewUrl.value) {
-        URL.revokeObjectURL(previewUrl.value);
-      }
-    }
-
     // 从列表中删除
     uploadedFiles.value.splice(index, 1);
-
-    // 更新激活状态
-    if (index === activeFileIndex.value) {
-      if (uploadedFiles.value.length > 0) {
-        activeFileIndex.value = 0;
-        loadFilePreview(uploadedFiles.value[0]);
-      } else {
-        activeFileIndex.value = -1;
-        selectedFile.value = null;
-        fileType.value = '';
-        resetPreviewState();
-      }
-    } else if (index < activeFileIndex.value) {
-      activeFileIndex.value--;
-    }
 
     ElMessage.success('文件已删除');
   } catch (error) {
@@ -992,17 +368,8 @@ const clearAllFiles = async () => {
       type: 'warning',
     });
 
-    // 释放所有预览资源
-    if (previewUrl.value) {
-      URL.revokeObjectURL(previewUrl.value);
-    }
-
-    // 清空列表和状态
+    // 清空列表
     uploadedFiles.value = [];
-    activeFileIndex.value = -1;
-    selectedFile.value = null;
-    fileType.value = '';
-    resetPreviewState();
 
     ElMessage.success('所有文件已清空');
   } catch (error) {
@@ -1060,6 +427,24 @@ const uploadFile = async (index) => {
 };
 
 /**
+ * 上传所有文件
+ */
+const uploadAllFiles = async () => {
+  const pendingFiles = uploadedFiles.value.filter(file => !file.uploading && !file.uploaded);
+  if (pendingFiles.length === 0) {
+    ElMessage.warning('暂无待上传的文件');
+    return;
+  }
+
+  for (const file of pendingFiles) {
+    const index = uploadedFiles.value.indexOf(file);
+    if (index !== -1) {
+      await uploadFile(index);
+    }
+  }
+};
+
+/**
  * 更新打印设置
  * @param {}
  */
@@ -1088,107 +473,8 @@ const upSet = async () => {
   }
 };
 
-/**
- * 打印单个文件
- * @param {number} index - 文件索引
- */
-const printFile = async (index) => {
-  const file = uploadedFiles.value[index];
-  if (!file || !file.uploaded || file.uploading) return;
-
-  // 验证打印参数
-  if (pageMode.value === 'custom' && !validateCustomPages()) {
-    ElMessage.warning('自定义页码格式错误，请输入正确的页码范围');
-    return;
-  }
-
-  try {
-    // 构建打印参数
-    const printParams = {
-      fileName: file.name,
-      count: count.value,
-      layout: layout.value,
-      pageMode: pageMode.value,
-      customPages: pageMode.value === 'custom' ? customPages.value : '',
-      color: color.value,
-      paperSize: paperSize.value
-    };
-
-    console.log('发送打印请求:', printParams);
-    ElMessage.success(`正在打印文件: ${file.name} (${count.value}份)`);
-    const res = await print(printParams);
-    // 可以添加打印记录到历史记录
-  } catch (error) {
-    ElMessage.error(`打印失败: ${error.message}`);
-    console.error('打印失败:', error);
-  }
-};
-
-/**
- * 打印所有已上传文件
- */
-const printAllFiles = async () => {
-  const uploadedFilesList = uploadedFiles.value.filter(file => file.uploaded);
-  if (uploadedFilesList.length === 0) {
-    ElMessage.warning('暂无已上传的文件可打印');
-    return;
-  }
-
-  // 验证打印参数
-  if (pageMode.value === 'custom' && !validateCustomPages()) {
-    ElMessage.warning('自定义页码格式错误，请输入正确的页码范围');
-    return;
-  }
-
-  try {
-    await ElConfirm({
-      title: '确认打印',
-      message: `确定要打印所有 ${uploadedFilesList.length} 个已上传文件吗？每份文件将打印 ${count.value} 份`,
-      confirmButtonText: '确认',
-      cancelButtonText: '取消',
-      type: 'info',
-    });
-
-    // 构建打印参数
-    const printParams = {
-      fileNames: uploadedFilesList.map(file => file.name),
-      count: count.value,
-      layout: layout.value,
-      pageMode: pageMode.value,
-      customPages: pageMode.value === 'custom' ? customPages.value : '',
-      color: color.value,
-      paperSize: paperSize.value
-    };
-
-    console.log('发送批量打印请求:', printParams);
-
-    // 这里可以添加实际的批量打印接口调用
-    // 模拟打印成功
-    ElMessage.success(`已开始打印 ${uploadedFilesList.length} 个文件，每份 ${count.value} 份`);
-
-    // 可以添加打印记录到历史记录
-  } catch (error) {
-    // 取消打印
-  }
-};
-
 // ========== 监听相关 ==========
-// 监听 PDF 缩放和旋转变化
-watch([pdfScale, pdfRotation], async () => {
-  if (fileType.value === 'pdf' && pdfDoc && !isPreviewLoading.value) {
-    await renderPdfPage();
-  }
-});
 
-// 监听窗口大小变化，重新渲染 PDF
-watch(
-  () => window.innerWidth,
-  async () => {
-    if (fileType.value === 'pdf' && pdfDoc && !isPreviewLoading.value) {
-      await renderPdfPage();
-    }
-  }
-);
 </script>
 
 <style>
