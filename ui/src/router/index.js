@@ -1,11 +1,10 @@
-// import { createRouter, createWebHistory } from 'vue-router'
 import { createRouter, createWebHashHistory } from 'vue-router' // 改为 createWebHashHistory
 import { useUserStore } from '@/stores/user'
 
 const routes = [
   {
     path: '/',
-    redirect: '/dashboard'
+    redirect: '/upload'
   },
   {
     path: '/login',
@@ -22,26 +21,18 @@ const routes = [
     component: () => import('@/views/Admin.vue'),
     meta: {
       title: '管理员控制页面',
-      requiresAuth: true,
-      roles: ['admin']
+      requiresAuth: false,
+      // 这里不再需要角色或登录限制
+      roles: []
     }
   },
   {
-    path: '/history',
-    name: 'History',
-    component: () => import('@/views/History.vue'),
-    meta: {
-      title: '历史记录',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('@/views/Dashboard.vue'),
+    path: '/upload',
+    name: 'Upload',
+    component: () => import('@/views/UploadPage.vue'),
     meta: {
       title: '主页面',
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -89,6 +80,7 @@ router.beforeEach((to, from, next) => {
     return
   }
 
+  // 如果有角色限制，检查用户角色是否符合要求
   if (to.meta.roles && !to.meta.roles.some(role => userStore.userRoles.includes(role))) {
     next('/403')
     return
