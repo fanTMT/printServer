@@ -215,7 +215,7 @@ const handleLogin = async () => {
 
     // 跳转到首页
     setTimeout(() => {
-      router.push('/dashboard')
+      router.push('/')
     }, 1500)
 
   } catch (error) {

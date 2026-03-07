@@ -1,40 +1,40 @@
 <template>
     <div class="font-inter bg-neutral-100 min-h-screen text-neutral-800">
         <!-- 主内容区 -->
-        <main class="container mx-auto px-4 py-8">
-            <h2 class="text-2xl font-bold mb-6">打印历史记录</h2>
+        <main class="container mx-auto px-3 md:px-4 py-4 md:py-8">
+            <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">打印历史记录</h2>
 
-            <!-- 统计卡片 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white rounded-xl shadow-card p-6 transition-all duration-300 hover:shadow-hover">
+            <!-- 统计卡片（手机端优化） -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
+                <div class="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-card p-4 md:p-6 transition-all duration-300">
                     <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-neutral-600 font-medium">总打印次数</h3>
-                        <span class="p-2 bg-primary/10 text-primary rounded-lg">
+                        <h3 class="text-xs md:text-sm text-neutral-600 font-medium">总打印次数</h3>
+                        <span class="p-1.5 md:p-2 bg-primary/10 text-primary rounded text-sm md:text-base">
                             <i class="fa fa-bar-chart"></i>
                         </span>
                     </div>
-                    <p class="text-3xl font-bold">{{ totalPrints }}</p>
-                    <p class="text-sm text-neutral-500 mt-1">本月: <span>{{ monthlyPrints }}</span> 次</p>
+                    <p class="text-2xl md:text-3xl font-bold">{{ totalPrints }}</p>
+                    <p class="text-xs md:text-sm text-neutral-500 mt-1">本月: {{ monthlyPrints }} 次</p>
                 </div>
-                <div class="bg-white rounded-xl shadow-card p-6 transition-all duration-300 hover:shadow-hover">
+                <div class="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-card p-4 md:p-6 transition-all duration-300">
                     <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-neutral-600 font-medium">已完成打印</h3>
-                        <span class="p-2 bg-secondary/10 text-secondary rounded-lg">
+                        <h3 class="text-xs md:text-sm text-neutral-600 font-medium">已完成打印</h3>
+                        <span class="p-1.5 md:p-2 bg-secondary/10 text-secondary rounded text-sm md:text-base">
                             <i class="fa fa-check-circle"></i>
                         </span>
                     </div>
-                    <p class="text-3xl font-bold">{{ completedPrints }}</p>
-                    <p class="text-sm text-neutral-500 mt-1">成功率: <span>{{ successRate }}</span></p>
+                    <p class="text-2xl md:text-3xl font-bold">{{ completedPrints }}</p>
+                    <p class="text-xs md:text-sm text-neutral-500 mt-1">成功率: {{ successRate }}</p>
                 </div>
-                <div class="bg-white rounded-xl shadow-card p-6 transition-all duration-300 hover:shadow-hover">
+                <div class="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-card p-4 md:p-6 transition-all duration-300">
                     <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-neutral-600 font-medium">打印文件大小</h3>
-                        <span class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                        <h3 class="text-xs md:text-sm text-neutral-600 font-medium">打印文件大小</h3>
+                        <span class="p-1.5 md:p-2 bg-blue-100 text-blue-600 rounded text-sm md:text-base">
                             <i class="fa fa-hdd-o"></i>
                         </span>
                     </div>
-                    <p class="text-3xl font-bold">{{ totalSize }}</p>
-                    <p class="text-sm text-neutral-500 mt-1">平均大小: <span>{{ avgSize }}</span></p>
+                    <p class="text-2xl md:text-3xl font-bold">{{ totalSize }}</p>
+                    <p class="text-xs md:text-sm text-neutral-500 mt-1">平均: {{ avgSize }}</p>
                 </div>
             </div>
 
@@ -266,7 +266,12 @@
                         </div>
                         <div>
                             <p class="text-sm text-neutral-600 mb-1">打印机</p>
-                            <p class="font-medium">{{ selectedFile.printer }}</p>
+                            <select v-model="selectedPrinter" class="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                                <option value="">未选择</option>
+                                <option v-for="printer in printerList" :key="printer.name" :value="printer.name">
+                                    {{ printer.name }} {{ printer.status ? '(在线)' : '(离线)' }}
+                                </option>
+                            </select>
                         </div>
                         <div>
                             <p class="text-sm text-neutral-600 mb-1">状态</p>
@@ -422,7 +427,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { get_all, print } from '@/api/api';
+import { get_all, print, getprinter } from '@/api/api';
 import { formatDate, parseArrayDate } from '@/utils/formatDate';
 
 // 响应式数据
@@ -445,6 +450,8 @@ const errorMsg = ref(''); // 新增：接口错误提示
 // 预览和打印相关
 const showPreviewPanel = ref(false);
 const selectedFile = ref(null);
+const selectedPrinter = ref('');
+const printerList = ref([]);
 const printCount = ref(1);
 const printLayout = ref('3');
 const printColor = ref('color');
@@ -603,17 +610,21 @@ const viewDetail = (item) => {
 };
 
 // 方法 - 预览文件
-const previewFile = (item) => {
+const previewFile = async (item) => {
     if (!item.file_path) {
         triggerNotification('无法预览', '该文件不可用或已删除', 'error');
         return;
     }
     selectedFile.value = item;
+    selectedPrinter.value = item.printer || '';
     showPreviewPanel.value = true;
     printCount.value = 1;
     printLayout.value = '3';
     printColor.value = 'color';
     printPages.value = '';
+    
+    // 加载打印机列表
+    await fetchPrinterList();
 };
 
 // 方法 - 关闭预览面板
@@ -623,17 +634,21 @@ const closePreviewPanel = () => {
 };
 
 // 方法 - 重新打印
-const printAgain = (item) => {
+const printAgain = async (item) => {
     if (!item.file_path) {
         triggerNotification('无法打印', '该文件不可用或已删除', 'error');
         return;
     }
     selectedFile.value = item;
+    selectedPrinter.value = item.printer || '';
     showPreviewPanel.value = true;
     printCount.value = 1;
     printLayout.value = '3';
     printColor.value = 'color';
     printPages.value = '';
+    
+    // 加载打印机列表
+    await fetchPrinterList();
 };
 
 // 方法 - 执行打印
@@ -644,7 +659,7 @@ const executePrint = async () => {
         // 构建后端 PrintValue 结构体对应的参数
         const printParams = {
             fileName: selectedFile.value.original_name,
-            printer: selectedFile.value.printer || '',
+            printer: selectedPrinter.value || selectedFile.value.printer || '',
             paperSize: selectedFile.value.paper_size || 'A4',
             layout: printLayout.value,
             customPages: printPages.value.trim() === '' ? '' : printPages.value.trim()
@@ -736,6 +751,21 @@ const fetchPrintQueue = async () => {
         console.error('请求打印队列出错：', err);
         errorMsg.value = '网络异常，请检查后端服务是否正常';
         triggerNotification('加载失败', errorMsg.value, 'error');
+    }
+};
+
+// 获取打印机列表
+const fetchPrinterList = async () => {
+    try {
+        const res = await getprinter();
+        if (res.success && res.code === 200) {
+            printerList.value = res.data || [];
+            console.log('打印机列表:', printerList.value);
+        } else {
+            console.warn('获取打印机列表失败:', res.message);
+        }
+    } catch (err) {
+        console.error('获取打印机列表出错：', err);
     }
 };
 

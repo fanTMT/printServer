@@ -96,53 +96,21 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
+import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ElMessageBox } from 'element-plus/es/components/message-box/index.mjs';
-import { get_setting, print, upload, set_setting } from '@/api/api';
-import { useUserStore } from '@/stores/user';
-
-const { hasRole, hasAnyRole } = useUserStore()
+import { upload } from '@/api/api';
 
 // 重命名为 confirm 方便使用
 const ElConfirm = ElMessageBox;
 
-// ========== 类型定义 ==========
-/**
- * @typedef {Object} UploadedFile
- * @property {string} name - 文件名
- * @property {number} size - 文件大小（字节）
- * @property {string} type - 文件MIME类型（冗余字段，方便访问）
- * @property {number} lastModified - 最后修改时间戳（冗余字段，方便访问）
- * @property {File} rawFile - 原生 File 对象（关键！用于 FileReader 读取）
- * @property {boolean} [uploaded] - 是否已上传到服务器
- * @property {boolean} [uploading] - 是否正在上传
- */
-
 // ========== 响应式变量 ==========
-// 打印机信息
-const printer = ref('默认打印机');
-const isauto = ref(false);
-
 // 文件相关状态
 const fileInput = ref(null);
 const isDragover = ref(false);
 
 // 上传文件列表
 const uploadedFiles = ref([]);
-
-
-// 打印设置
-const count = ref(1);
-const layout = ref(3);
-const pageMode = ref('all');
-const customPages = ref('');
-const isCustomPagesValid = ref(true);
-const color = ref('color');
-// const paperSize = ref('A4');
-
-// 定时器标识
-let printerCheckTimer = null;
 
 // ========== 工具函数 ==========
 /**
@@ -154,56 +122,6 @@ const formatFileSize = (bytes) => {
   if (bytes < 1024) return `${bytes} B`;
   else if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   else return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
-
-/**
- * 验证自定义页码格式
- * @param {string} value - 页码字符串
- * @returns {boolean} 是否有效
- */
-const validateCustomPages = () => {
-  if (!customPages.value) {
-    isCustomPagesValid.value = true;
-    return true;
-  }
-
-  // 正则表达式：匹配 1-5,8,11-13 这样的格式
-  const regex = /^(\d+(-\d+)?)(,\s*\d+(-\d+)?)*$/;
-  isCustomPagesValid.value = regex.test(customPages.value);
-  return isCustomPagesValid.value;
-};
-
-// ========== 生命周期钩子 ==========
-onMounted(async () => {
-  // 获取打印机配置
-  await fetchPrinterConfig();
-
-  // 定时检查打印机状态（15秒一次）
-  printerCheckTimer = setInterval(fetchPrinterConfig, 15000);
-});
-
-onUnmounted(() => {
-  // 清除定时器
-  if (printerCheckTimer) {
-    clearInterval(printerCheckTimer);
-  }
-});
-
-// ========== 初始化相关 ==========
-/**
- * 获取打印机配置
- */
-const fetchPrinterConfig = async () => {
-  try {
-    const res = await get_setting();
-    if (res.code === 200) {
-      printer.value = res.data.printer;
-      isauto.value = res.data.enabled_auto_print;
-    }
-  } catch (error) {
-    console.error('获取打印机配置失败:', error);
-    ElMessage.warning('无法获取打印机信息，使用默认配置');
-  }
 };
 
 /**
@@ -276,19 +194,16 @@ const addFileToList = (rawFile) => {
     return;
   }
 
-  // 包装文件对象：保存原生 File 对象，同时添加状态字段
-  /** @type {UploadedFile} */
   const fileWithState = {
     name: rawFile.name,
     size: rawFile.size,
     type: rawFile.type,
     lastModified: rawFile.lastModified,
-    rawFile: rawFile, // 关键：保存原生 File 对象
+    rawFile: rawFile,
     uploaded: false,
     uploading: false
   };
 
-  // 添加文件到列表
   uploadedFiles.value.push(fileWithState);
   ElMessage.success(`文件 "${rawFile.name}" 已添加到列表`);
 };
@@ -387,39 +302,25 @@ const uploadFile = async (index) => {
   if (!file || !file.rawFile || file.uploading || file.uploaded) return;
 
   try {
-    // 更新上传状态
     uploadedFiles.value[index] = { ...file, uploading: true };
 
-    // 构建 FormData（使用原生 File 对象）
     const formData = new FormData();
     formData.append('file', file.rawFile);
-    formData.append('count', count.value);
 
-    // 调用上传接口
     const res = await upload(formData);
     console.log('文件上传结果:', res);
 
     if (res.success) {
-      // 更新上传状态
       uploadedFiles.value[index] = {
         ...file,
         uploading: false,
         uploaded: true
       };
-      if (res.isauto) {
-        console.log('自动打印:', res.file_name);
-        uploadedFiles.value[index] = {
-          ...file,
-          printed: true
-        };
-      }
       ElMessage.success(`文件 "${file.name}" 上传成功！`);
-      await upSet();
     } else {
       throw new Error(res.message || '上传失败');
     }
   } catch (error) {
-    // 恢复上传状态
     uploadedFiles.value[index] = { ...file, uploading: false };
     ElMessage.error(`文件上传失败: ${error.message}`);
     console.error('上传失败:', error);
@@ -443,37 +344,6 @@ const uploadAllFiles = async () => {
     }
   }
 };
-
-/**
- * 更新打印设置
- * @param {}
- */
-const upSet = async () => {
-  // 构建打印参数
-  const data = {
-    "orientation": layout.value,
-    "isauto": isauto.value,
-    "page_size": pageMode.value === 'custom' ? customPages.value : '',
-    "printer": printer.value
-  };
-
-  console.log("更新设置:", data);
-  try {
-    const res = await set_setting(data);
-    console.log("【用户】更新设置:", res.data, res);
-    if (res.success && res.code == 200) {
-      ElMessage.success('打印设置更新成功！');
-    } else {
-      ElMessage.error('更新失败：' + (res.message || '服务端异常'));
-    }
-  } catch (err) {
-    console.error('请求打印队列出错：', err);
-    ElMessage.error('网络异常，请检查后端服务是否正常');
-  } finally {
-  }
-};
-
-// ========== 监听相关 ==========
 
 </script>
 

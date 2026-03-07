@@ -22,7 +22,6 @@ const routes = [
     meta: {
       title: '管理员控制页面',
       requiresAuth: false,
-      // 这里不再需要角色或登录限制
       roles: []
     }
   },
