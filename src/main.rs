@@ -1,6 +1,5 @@
-use std::sync::{Arc, RwLock};
-
 use psr::{AppState, config, db, jwt, logger, router};
+use std::sync::{Arc, RwLock};
 use tracing::info;
 
 #[tokio::main]
@@ -29,10 +28,10 @@ async fn run(pool: sqlx::Pool<sqlx::Sqlite>, config: config::Config) -> anyhow::
     // 创建路由
     let app = router::create_router(app_state).await?;
     // 格式化输出
-    let ip = format!("{}:{}", &config.app.ip, &config.app.port);
+    let ip = format!("{}:{}", config.app.ip, config.app.port);
     info!(target: "axum","web页面运行： http://{}", ip.to_string());
     // 全地址监听
-    let address = format!("[::]:{}", &config.app.port);
+    let address = format!("[::]:{}", config.app.port);
     let listener = tokio::net::TcpListener::bind(address).await?;
     // 启动axum服务
     axum::serve(listener, app).await?;

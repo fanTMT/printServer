@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 获取全部列表
 export function get_all() {
   return request({
-    url: '/getall',
+    url: '/api/getall',
     method: 'get',
   })
 }
@@ -45,8 +45,25 @@ export function upload(data) {
 // 打印文件
 export function print(data) {
   return request({
-    url: '/print',
+    url: '/api/print',
     method: 'post',
     data
+  })
+}
+
+// 获取二维码图片
+export function getQRCode() {
+  return request({
+    url: '/api/auth/qrcode',
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
+// clear queue
+export function clearQueue() {
+  return request({
+    url: '/api/reset',
+    method: 'post',
   })
 }

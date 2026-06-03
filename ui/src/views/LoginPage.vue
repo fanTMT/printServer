@@ -213,9 +213,9 @@ const handleLogin = async () => {
       showClose: true
     })
 
-    // 跳转到首页
+    // 跳转到admin页面，稍微延迟一下以便用户看到成功消息
     setTimeout(() => {
-      router.push('/')
+      router.push('/admin')
     }, 1500)
 
   } catch (error) {

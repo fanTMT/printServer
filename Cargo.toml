@@ -1,6 +1,6 @@
 [package]
 name = "psr"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2024"
 build = "build.rs"
 license = "GPL3"
@@ -12,7 +12,8 @@ description = "Rust+Axum开发的打印中转服务"
 [package.metadata.deb]
 name = "web-rust-print"
 license-file = ["LICENSE", "644"]
-depends = "$auto"
+depends = "cups"
+extended-description = "Print server"
 maintainer-scripts = "debian/"
 assets = [
     [

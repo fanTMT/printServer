@@ -2,6 +2,7 @@
   <div class="not-found">
     <h1>404 - 页面未找到</h1>
     <p>抱歉，您访问的页面不存在。</p>
+    <el-button @click="$router.push('/')">返回主页</el-button>
     <el-button @click="$router.push('/login')">返回登录页</el-button>
   </div>
 </template>

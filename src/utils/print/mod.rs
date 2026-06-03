@@ -112,6 +112,7 @@ pub fn get_printers() -> Result<Vec<String>> {
     Ok(printers)
 }
 
+/// 目前不支持
 #[cfg(target_os = "macos")]
 pub fn get_printers() -> Result<Vec<String>> {
     let output = Command::new("lpstat").arg("-p").output()?;

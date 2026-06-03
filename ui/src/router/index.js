@@ -4,7 +4,70 @@ import { useUserStore } from '@/stores/user'
 const routes = [
   {
     path: '/',
-    redirect: '/upload'
+    redirect: '/home/upload'
+  },
+  {
+    path: '/upload',
+    redirect: '/home/upload'
+  },
+  {
+    path: '/qrcode',
+    redirect: '/home/qrcode'
+  },
+  {
+    path: '/admin',
+    redirect: '/home/admin'
+  },
+  {
+    path: '/setting',
+    redirect: '/home/setting'
+  },
+  {
+    path: '/home',
+    name: 'Home',
+    component: () => import('@/views/Home.vue'),
+    meta: {
+      title: '主页',
+      requiresAuth: false
+    },
+    children: [
+      {
+        path: 'upload',
+        name: 'HomeUpload',
+        component: () => import('@/views/UploadPage.vue'),
+        meta: {
+          title: '上传文件',
+          requiresAuth: false
+        }
+      },
+      {
+        path: 'qrcode',
+        name: 'QRCode',
+        component: () => import('@/views/QRCodePage.vue'),
+        meta: {
+          title: '二维码上传',
+          requiresAuth: false
+        }
+      },
+      {
+        path: 'admin',
+        name: 'Admin',
+        component: () => import('@/views/Admin.vue'),
+        meta: {
+          title: '历史记录',
+          requiresAuth: false
+        }
+      },
+      {
+        path: 'setting',
+        name: 'HomeSetting',
+        component: () => import('@/views/Setting.vue'),
+        meta: {
+          title: '系统设置',
+          requiresAuth: false
+        }
+      }
+    ]
   },
   {
     path: '/login',
@@ -12,25 +75,6 @@ const routes = [
     component: () => import('@/views/LoginPage.vue'),
     meta: {
       title: '登录',
-      requiresAuth: false
-    }
-  },
-  {
-    path: '/admin',
-    name: 'Admin',
-    component: () => import('@/views/Admin.vue'),
-    meta: {
-      title: '管理员控制页面',
-      requiresAuth: false,
-      roles: []
-    }
-  },
-  {
-    path: '/upload',
-    name: 'Upload',
-    component: () => import('@/views/UploadPage.vue'),
-    meta: {
-      title: '主页面',
       requiresAuth: false
     }
   },

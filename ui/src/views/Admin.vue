@@ -2,8 +2,6 @@
     <div class="font-inter bg-neutral-100 min-h-screen text-neutral-800">
         <!-- 主内容区 -->
         <main class="container mx-auto px-3 md:px-4 py-4 md:py-8">
-            <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">打印历史记录</h2>
-
             <!-- 统计卡片（手机端优化） -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
                 <div class="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-card p-4 md:p-6 transition-all duration-300">
@@ -371,16 +369,6 @@
         <!-- 预览面板背景遮罩 -->
         <div v-if="showPreviewPanel" class="fixed inset-0 bg-black bg-opacity-30 z-30" @click="closePreviewPanel"></div>
 
-        <!-- 页脚 -->
-        <footer class="bg-white border-t border-neutral-200 mt-12 py-6">
-            <div class="container mx-auto px-4">
-                <div class="text-center text-neutral-500 text-sm">
-                    <p>© 2025 打印助手 - 安全、高效的在线打印解决方案</p>
-                    <p class="mt-2">支持多种文件格式，保护您的文件安全</p>
-                </div>
-            </div>
-        </footer>
-
         <!-- 确认对话框 -->
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             :class="{ hidden: !showConfirmDialog }">
@@ -427,7 +415,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { get_all, print, getprinter } from '@/api/api';
+import { get_all, print, getprinter, clearQueue, get_setting } from '@/api/api';
 import { formatDate, parseArrayDate } from '@/utils/formatDate';
 
 // 响应式数据
@@ -454,7 +442,7 @@ const selectedPrinter = ref('');
 const printerList = ref([]);
 const printCount = ref(1);
 const printLayout = ref('3');
-const printColor = ref('color');
+const printColor = ref('black');
 const printPages = ref('');
 
 // 筛选条件（适配新状态值）
@@ -478,6 +466,9 @@ const historyData = ref([]);
 onMounted(() => {
     fetchPrintQueue();
     updateStatistics();
+    // 加载设置与打印机列表
+    fetchSettings();
+    fetchPrinterList();
 
     // 初始化日期筛选（本月1号到今天）
     const now = new Date();
@@ -729,11 +720,21 @@ const deleteRecord = (id) => {
 };
 
 // 方法 - 清空所有历史
-const clearAllHistory = () => {
-    historyData.value = [];
-    showConfirmDialog.value = false;
-    updateStatistics();
-    triggerNotification('清空成功', '已清空所有历史记录', 'success');
+const clearAllHistory = async () => {
+    try {
+        const res = await clearQueue();
+        if (res.success && res.code === 200) {
+            historyData.value = [];
+            showConfirmDialog.value = false;
+            updateStatistics();
+            triggerNotification('清空成功', '已清空所有历史记录', 'success');
+        } else {
+            triggerNotification('清空失败', res.message || '服务器清空队列失败', 'error');
+        }
+    } catch (err) {
+        console.error('清空队列出错:', err);
+        triggerNotification('清空失败', '无法连接到服务器，请检查网络', 'error');
+    }
 };
 
 // 请求真实历史数据
@@ -769,6 +770,24 @@ const fetchPrinterList = async () => {
     }
 };
 
+// 获取设置
+const fetchSettings = async () => {
+  loading.value = true;
+  try {
+    const res = await get_setting();
+    if (res.success && res.code === 200 && res.data) {
+      printLayout.value = res.data.orientation || 3;
+      originalSettings.value = JSON.parse(JSON.stringify(settings.value));
+      ElMessage.success('设置已加载');
+    }
+  } catch (err) {
+    console.error('获取设置出错:', err);
+    ElMessage.error('无法获取设置');
+    originalSettings.value = JSON.parse(JSON.stringify(settings.value));
+  } finally {
+    loading.value = false;
+  }
+};
 
 // 筛选后的历史数据
 const filteredHistory = computed(() => {

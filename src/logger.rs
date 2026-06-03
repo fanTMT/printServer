@@ -23,7 +23,7 @@ fn init_dev(config: &Config) {
         .with_file(true) // 显示文件名
         .with_line_number(true); // 显示行号
 
-    println!("日志目录:{:?}", &config.log.file_path);
+    println!("日志目录:{:?}", config.log.file_path);
     let file_appender = RollingFileAppender::builder()
         .filename_prefix("printAxum")
         .filename_suffix("debug.log")
@@ -62,7 +62,7 @@ fn init_pro(config: &Config) {
         .with_file(false) // 生产环境不显示文件名（安全考虑）
         .with_line_number(false); // 生产环境不显示行号
 
-    println!("日志目录:{:?}", &config.log.file_path);
+    println!("日志目录:{:?}", config.log.file_path);
     let file_appender = RollingFileAppender::builder()
         .filename_prefix("printAxum")
         .filename_suffix("log")
